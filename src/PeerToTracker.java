@@ -24,9 +24,4 @@ class PeerToTracker implements Serializable{
 
     // notify
     public String peerName;
-
-    // Bytes to sent the file
-    byte[] buffer = new byte[4096];
-
-
 }
