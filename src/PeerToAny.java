@@ -2,7 +2,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-class PeerToTracker implements Serializable{
+class PeerToAny implements Serializable{
     public Method method;
     public StatusCode statusCode;
 
@@ -27,6 +27,4 @@ class PeerToTracker implements Serializable{
 
     // Bytes to sent the file
     byte[] buffer = new byte[4096];
-
-
 }
