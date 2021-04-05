@@ -83,9 +83,9 @@ public class Tracker {
                 out = new ObjectOutputStream(socket.getOutputStream());
 
                 if(req.method == Method.REGISTER){
-                    notifyFailure(Request.StatusCodes.MALFORMED_REQUEST, out);
+
                 }else if(req.method == Method.LOGIN){
-                    push(req.artistName, req.songName.toLowerCase(), out);
+
                 }else if(req.method == Method.LOGOUT){
 
                 }
