@@ -4,6 +4,7 @@ import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 
@@ -78,14 +79,30 @@ public class Tracker {
             ObjectOutputStream out = null;
             try{
                 in = new ObjectInputStream(socket.getInputStream());
-                PeerToTracker req= (PeerToTracker) in.readObject();
+                PeerToTracker req = (PeerToTracker) in.readObject();
                 System.out.printf("[Tracker %s , %d] GOT REQUEST " + req.toString() , getIp() , getPort());
                 out = new ObjectOutputStream(socket.getOutputStream());
 
                 if(req.method == Method.REGISTER){
-
+                    if(Registered_peers.containsKey(req.username)){
+                        FailureRegister(req, out);
+                    }else{
+                        Registered_peers.put(req.username, req.password);
+                        SuccessRegister(req, out);
+                    }
                 }else if(req.method == Method.LOGIN){
-
+                    if(Registered_peers.containsKey(req.username) && Registered_peers.get(req.username).equals(req.password)){
+                        int token_id = getRandomTokenId();
+                        SuccessLogin(req, out, token_id);
+                        //in = new ObjectInputStream(socket.getInputStream());  //TODO CHECK IF IT IS WORKING
+                        PeerToTracker secondinput = (PeerToTracker) in.readObject();
+                        System.out.printf("[Tracker %s , %d] GOT SHARED_DIRECTORY " + req.toString() , getIp() , getPort());
+                        Info peerinfo = new Info(secondinput.ip, secondinput.port, secondinput.username, secondinput.shared_directory);
+                        TokenId_toInfo.put(token_id, peerinfo);
+                        //TODO FILL Files_toToken array .
+                    }else{
+                        FailureLogin(req, out);
+                    }
                 }else if(req.method == Method.LOGOUT){
 
                 }
@@ -110,7 +127,7 @@ public class Tracker {
 //                    notifyFailure(Request.StatusCodes.MALFORMED_REQUEST, out);
 //                }
 
-            } catch (IOException e) {
+            } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
             }
             try {
@@ -127,4 +144,40 @@ public class Tracker {
                 e.printStackTrace();
             }
         }
+
+    public int getRandomTokenId() {
+        int min=0;
+        int max=100;
+        int tokenid = 0;
+        while(All_tokenids.contains(tokenid)) {
+            tokenid = (int) ((Math.random() * (max - min)) + min);
+        }
+        return tokenid;
+    }
+
+    public void FailureRegister(PeerToTracker req, ObjectOutputStream out) throws IOException {
+        AnyToPeer reply = new AnyToPeer();
+        reply.statusCode = StatusCode.UNSUCCESSFUL_REGISTER;
+        out.writeObject(reply);
+    }
+
+    public void SuccessRegister(PeerToTracker req, ObjectOutputStream out) throws IOException {
+        AnyToPeer reply = new AnyToPeer();
+        reply.statusCode = StatusCode.SUCCESSFUL_REGISTER;
+        out.writeObject(reply);
+    }
+
+    public void FailureLogin(PeerToTracker req, ObjectOutputStream out) throws IOException {
+        AnyToPeer reply = new AnyToPeer();
+        reply.statusCode = StatusCode.UNSUCCESSFUL_LOGIN;
+        out.writeObject(reply);
+    }
+
+    public void SuccessLogin(PeerToTracker req, ObjectOutputStream out, int token) throws IOException {
+        AnyToPeer reply = new AnyToPeer();
+        All_tokenids.add(token);
+        reply.token_id = token;
+        reply.statusCode = StatusCode.SUCCESSFUL_LOGIN;
+        out.writeObject(reply);
+    }
 }
