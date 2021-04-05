@@ -1,19 +1,21 @@
+import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 
 public class Tracker {
     ConcurrentHashMap<String, String> Registered_peers;
     ConcurrentHashMap<Integer, Info> TokenId_toInfo;
-    ConcurrentHashMap<String, ArrayList<Integer>> Files_toToken;
+    ConcurrentHashMap<File, ArrayList<Integer>> Files_toToken;
     ArrayList<Integer> All_tokenids;
-    ArrayList<String> All_files;
+    ArrayList<File> All_files;
     private String ip;
 
     public String getIp() {
@@ -26,9 +28,12 @@ public class Tracker {
 
     private int port;
 
-    public Tracker(String ip, int port) {
+    public Tracker(String ip, int port, String path) {
         this.ip = ip;
         this.port = port;
+        Path Realpath = Paths.get(path);
+        All_files = Util.Readfiledownloadlist(Realpath);
+        FillFiles_toToken();
         //TODO: Read TXT and fill the All_files array;
     }
 
@@ -58,74 +63,56 @@ public class Tracker {
 
     public static void main(String[] args){
         try{
-            Tracker p = new Tracker(args[0],Integer.parseInt(args[1]));
+            Tracker p = new Tracker(args[0],Integer.parseInt(args[1]), args[2]);
             p.startServer();
 
         }catch (Exception e) {
-            System.out.println("Usage: java Publisher ip port");
+            System.out.println("Usage: java Tracker ip port");
             System.out.println(e.getMessage());
             e.printStackTrace();
         }
     }
 
-    public class ΤrackerHandler extends Thread{
+    public class ΤrackerHandler extends Thread {
         Socket socket;
-        public ΤrackerHandler(Socket socket){
+
+        public ΤrackerHandler(Socket socket) {
             this.socket = socket;
         }
+
         @Override
-        public void run(){ //Protocol
+        public void run() { //Protocol
             ObjectInputStream in = null;
             ObjectOutputStream out = null;
-            try{
+            try {
                 in = new ObjectInputStream(socket.getInputStream());
                 PeerToTracker req = (PeerToTracker) in.readObject();
-                System.out.printf("[Tracker %s , %d] GOT REQUEST " + req.toString() , getIp() , getPort());
+                System.out.printf("[Tracker %s , %d] GOT REQUEST " + req.toString(), getIp(), getPort());
                 out = new ObjectOutputStream(socket.getOutputStream());
 
-                if(req.method == Method.REGISTER){
-                    if(Registered_peers.containsKey(req.username)){
+                if (req.method == Method.REGISTER) {
+                    if (Registered_peers.containsKey(req.username)) {
                         FailureRegister(req, out);
-                    }else{
+                    } else {
                         Registered_peers.put(req.username, req.password);
                         SuccessRegister(req, out);
                     }
-                }else if(req.method == Method.LOGIN){
-                    if(Registered_peers.containsKey(req.username) && Registered_peers.get(req.username).equals(req.password)){
+                } else if (req.method == Method.LOGIN) {
+                    if (Registered_peers.containsKey(req.username) && Registered_peers.get(req.username).equals(req.password)) {
                         int token_id = getRandomTokenId();
                         SuccessLogin(req, out, token_id);
                         //in = new ObjectInputStream(socket.getInputStream());  //TODO CHECK IF IT IS WORKING
                         PeerToTracker secondinput = (PeerToTracker) in.readObject();
-                        System.out.printf("[Tracker %s , %d] GOT SHARED_DIRECTORY " + req.toString() , getIp() , getPort());
+                        System.out.printf("[Tracker %s , %d] GOT SHARED_DIRECTORY " + req.toString(), getIp(), getPort());
                         Info peerinfo = new Info(secondinput.ip, secondinput.port, secondinput.username, secondinput.shared_directory);
                         TokenId_toInfo.put(token_id, peerinfo);
                         //TODO FILL Files_toToken array .
-                    }else{
+                    } else {
                         FailureLogin(req, out);
                     }
-                }else if(req.method == Method.LOGOUT){
+                } else if (req.method == Method.LOGOUT) {
 
                 }
-                //if(Registered_peers.contains())
-
-//                Request.RequestToPublisher req= (Request.RequestToPublisher) in.readObject();
-//                System.out.printf("[PUBLISHER %s , %d] GOT REQUEST " + req.toString() , getIp() , getPort());
-//                out = new ObjectOutputStream(socket.getOutputStream());
-//                if(req.method == Request.Methods.PUSH) {
-//                    if(req.artistName==null || req.songName==null){
-//                        notifyFailure(Request.StatusCodes.MALFORMED_REQUEST, out);
-//                    }else {
-//                        push(req.artistName, req.songName.toLowerCase(), out);
-//                    }
-//                }else if(req.method == Request.Methods.SEARCH){
-//                    if(req.artistName==null){
-//                        notifyFailure(Request.StatusCodes.MALFORMED_REQUEST, out);
-//                    }else{
-//                        search(req.artistName, out);
-//                    }
-//                }else{
-//                    notifyFailure(Request.StatusCodes.MALFORMED_REQUEST, out);
-//                }
 
             } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
@@ -133,17 +120,18 @@ public class Tracker {
             try {
                 if (in != null) in.close();
                 if (out != null) out.close();
-                if(socket != null) socket.close();
-            }
-            catch(Exception e){
+                if (socket != null) socket.close();
+            } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-        } catch (IOException e) {
-                e.printStackTrace();
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-            }
         }
+    }
+
+    public void FillFiles_toToken(){
+        for(File i : All_files){
+            Files_toToken.put(i, new ArrayList<Integer>());
+        }
+    }
 
     public int getRandomTokenId() {
         int min=0;
