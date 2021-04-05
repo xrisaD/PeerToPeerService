@@ -1,6 +1,5 @@
 public enum StatusCode {
-    MALFORMED_REQUEST,
-    NOT_FOUND,
-    OK,
-    NOT_RESPONSIBLE
+    //Register from peer
+    SUCCESSFUL_REGISTER,
+    UNSUCCESSFUL_REGISTER
 }
