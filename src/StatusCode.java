@@ -1,5 +1,10 @@
 public enum StatusCode {
-    //Register from peer
+    // Register from peer
     SUCCESSFUL_REGISTER,
-    UNSUCCESSFUL_REGISTER
+    UNSUCCESSFUL_REGISTER,
+    SUCCESSFUL_LOGOUT,
+    UNSUCCESSFUL_LOGOUT,
+    FILE_NOTFOUND,
+    FILE_FOUND,
+    PEER_ISACTIVE,
 }
