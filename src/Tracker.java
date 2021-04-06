@@ -1,20 +1,22 @@
+import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 
 public class Tracker {
     ConcurrentHashMap<String, String> Registered_peers;
     ConcurrentHashMap<Integer, Info> TokenId_toInfo;
-    ConcurrentHashMap<String, ArrayList<Integer>> Files_toToken;
+    ConcurrentHashMap<File, ArrayList<Integer>> Files_toToken;
     ArrayList<Integer> All_tokenids;
-    ArrayList<String> All_files;
-    private final String ip;
+    ArrayList<File> All_files;
+    private String ip;
 
     public String getIp() {
         return ip;
@@ -24,11 +26,14 @@ public class Tracker {
         return port;
     }
 
-    private final int port;
+    private int port;
 
-    public Tracker(String ip, int port) {
+    public Tracker(String ip, int port, String path) {
         this.ip = ip;
         this.port = port;
+        Path Realpath = Paths.get(path);
+        All_files = Util.Readfiledownloadlist(Realpath);
+        FillFiles_toToken();
         //TODO: Read TXT and fill the All_files array;
     }
 
@@ -58,11 +63,11 @@ public class Tracker {
 
     public static void main(String[] args){
         try{
-            Tracker p = new Tracker(args[0],Integer.parseInt(args[1]));
+            Tracker p = new Tracker(args[0],Integer.parseInt(args[1]), args[2]);
             p.startServer();
 
         }catch (Exception e) {
-            System.out.println("Usage: java Publisher ip port");
+            System.out.println("Usage: java Tracker ip port");
             System.out.println(e.getMessage());
             e.printStackTrace();
         }
@@ -108,26 +113,6 @@ public class Tracker {
                 } else if (req.method == Method.LOGOUT) {
 
                 }
-                //if(Registered_peers.contains())
-
-//                Request.RequestToPublisher req= (Request.RequestToPublisher) in.readObject();
-//                System.out.printf("[PUBLISHER %s , %d] GOT REQUEST " + req.toString() , getIp() , getPort());
-//                out = new ObjectOutputStream(socket.getOutputStream());
-//                if(req.method == Request.Methods.PUSH) {
-//                    if(req.artistName==null || req.songName==null){
-//                        notifyFailure(Request.StatusCodes.MALFORMED_REQUEST, out);
-//                    }else {
-//                        push(req.artistName, req.songName.toLowerCase(), out);
-//                    }
-//                }else if(req.method == Request.Methods.SEARCH){
-//                    if(req.artistName==null){
-//                        notifyFailure(Request.StatusCodes.MALFORMED_REQUEST, out);
-//                    }else{
-//                        search(req.artistName, out);
-//                    }
-//                }else{
-//                    notifyFailure(Request.StatusCodes.MALFORMED_REQUEST, out);
-//                }
 
             } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
@@ -139,6 +124,12 @@ public class Tracker {
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
+        }
+    }
+
+    public void FillFiles_toToken(){
+        for(File i : All_files){
+            Files_toToken.put(i, new ArrayList<Integer>());
         }
     }
 
