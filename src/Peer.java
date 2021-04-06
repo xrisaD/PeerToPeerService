@@ -104,7 +104,7 @@ public class Peer {
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
-        try {
+        try{
             if (in != null) in.close();
             if (out != null) out.close();
             if (socket != null) socket.close();
@@ -132,8 +132,6 @@ public class Peer {
             peerToTracker.username = username;
             peerToTracker.password = password;
             out.writeObject(peerToTracker);
-
-            in = new ObjectInputStream(socket.getInputStream());
 
             AnyToPeer reply = (AnyToPeer) in.readObject();
             System.out.println(reply.toString());
@@ -241,9 +239,28 @@ public class Peer {
             // 4: shared_directory path 5: fileDownloadList.txt. path
             System.out.println("Start...");
             Peer p = new Peer(args[0], parseInt(args[1]), args[2], args[3], args[4], args[5]);
+
+            System.out.println("Start...");
+            PeerMainThread peerMainThread = new PeerMainThread(p);
+            peerMainThread.start();
+
+
             System.out.println("Start...");
             p.startServer();
 
+        }catch (Exception e) {
+            System.out.println(e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    public static class PeerMainThread extends Thread {
+        Peer p;
+        PeerMainThread(Peer p){
+            this.p = p;
+        }
+        @Override
+        public void run() {
             boolean registered = false;
             boolean loggedin = false;
             System.out.println("Start...");
@@ -284,12 +301,6 @@ public class Peer {
                 }
 
             }
-
-        }catch (Exception e) {
-            System.out.println(e.getMessage());
-            e.printStackTrace();
         }
     }
-
-
 }

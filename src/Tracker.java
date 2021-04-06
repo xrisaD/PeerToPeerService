@@ -86,10 +86,11 @@ public class Tracker {
             ObjectInputStream in = null;
             ObjectOutputStream out = null;
             try {
+                out = new ObjectOutputStream(socket.getOutputStream());
                 in = new ObjectInputStream(socket.getInputStream());
+
                 PeerToTracker req = (PeerToTracker) in.readObject();
                 System.out.printf("[Tracker %s , %d] GOT REQUEST " + req.toString(), getIp(), getPort());
-                out = new ObjectOutputStream(socket.getOutputStream());
 
                 if (req.method == Method.REGISTER) {
                     if (Registered_peers.containsKey(req.username)) {
