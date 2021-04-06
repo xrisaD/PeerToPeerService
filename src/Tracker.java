@@ -14,7 +14,7 @@ public class Tracker {
     ConcurrentHashMap<String, ArrayList<Integer>> Files_toToken;
     ArrayList<Integer> All_tokenids;
     ArrayList<String> All_files;
-    private String ip;
+    private final String ip;
 
     public String getIp() {
         return ip;
@@ -24,7 +24,7 @@ public class Tracker {
         return port;
     }
 
-    private int port;
+    private final int port;
 
     public Tracker(String ip, int port) {
         this.ip = ip;
@@ -68,42 +68,44 @@ public class Tracker {
         }
     }
 
-    public class ΤrackerHandler extends Thread{
+    public class ΤrackerHandler extends Thread {
         Socket socket;
-        public ΤrackerHandler(Socket socket){
+
+        public ΤrackerHandler(Socket socket) {
             this.socket = socket;
         }
+
         @Override
-        public void run(){ //Protocol
+        public void run() { //Protocol
             ObjectInputStream in = null;
             ObjectOutputStream out = null;
-            try{
+            try {
                 in = new ObjectInputStream(socket.getInputStream());
                 PeerToTracker req = (PeerToTracker) in.readObject();
-                System.out.printf("[Tracker %s , %d] GOT REQUEST " + req.toString() , getIp() , getPort());
+                System.out.printf("[Tracker %s , %d] GOT REQUEST " + req.toString(), getIp(), getPort());
                 out = new ObjectOutputStream(socket.getOutputStream());
 
-                if(req.method == Method.REGISTER){
-                    if(Registered_peers.containsKey(req.username)){
+                if (req.method == Method.REGISTER) {
+                    if (Registered_peers.containsKey(req.username)) {
                         FailureRegister(req, out);
-                    }else{
+                    } else {
                         Registered_peers.put(req.username, req.password);
                         SuccessRegister(req, out);
                     }
-                }else if(req.method == Method.LOGIN){
-                    if(Registered_peers.containsKey(req.username) && Registered_peers.get(req.username).equals(req.password)){
+                } else if (req.method == Method.LOGIN) {
+                    if (Registered_peers.containsKey(req.username) && Registered_peers.get(req.username).equals(req.password)) {
                         int token_id = getRandomTokenId();
                         SuccessLogin(req, out, token_id);
                         //in = new ObjectInputStream(socket.getInputStream());  //TODO CHECK IF IT IS WORKING
                         PeerToTracker secondinput = (PeerToTracker) in.readObject();
-                        System.out.printf("[Tracker %s , %d] GOT SHARED_DIRECTORY " + req.toString() , getIp() , getPort());
+                        System.out.printf("[Tracker %s , %d] GOT SHARED_DIRECTORY " + req.toString(), getIp(), getPort());
                         Info peerinfo = new Info(secondinput.ip, secondinput.port, secondinput.username, secondinput.shared_directory);
                         TokenId_toInfo.put(token_id, peerinfo);
                         //TODO FILL Files_toToken array .
-                    }else{
+                    } else {
                         FailureLogin(req, out);
                     }
-                }else if(req.method == Method.LOGOUT){
+                } else if (req.method == Method.LOGOUT) {
 
                 }
                 //if(Registered_peers.contains())
@@ -133,17 +135,12 @@ public class Tracker {
             try {
                 if (in != null) in.close();
                 if (out != null) out.close();
-                if(socket != null) socket.close();
-            }
-            catch(Exception e){
+                if (socket != null) socket.close();
+            } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-        } catch (IOException e) {
-                e.printStackTrace();
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-            }
         }
+    }
 
     public int getRandomTokenId() {
         int min=0;

@@ -4,7 +4,6 @@ import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 
 public class Peer {
@@ -17,6 +16,8 @@ public class Peer {
     public String password;
 
     public ArrayList<String> fileTitles;
+
+    public String sharedDirectoryPath;
 
     public String getIp() {
         return ip;
@@ -106,7 +107,7 @@ public class Peer {
             AnyToPeer reply = (AnyToPeer) in.readObject();
             if (reply.statusCode == StatusCode.SUCCESSFUL_LOGIN){
                 setToken_id(reply.token_id);
-                list(out);
+                inform(out);
             } else if (reply.statusCode == StatusCode.UNSUCCESSFUL_LOGIN){
                 //TODO: ksanavale username + password
 
@@ -120,10 +121,8 @@ public class Peer {
             e.printStackTrace();
         }
     }
-//    publci void logout(){
-//
-//    }
-    public void list(ObjectOutputStream out) throws IOException {
+
+    public void inform(ObjectOutputStream out) throws IOException {
         PeerToTracker peerToTracker = new PeerToTracker();
         peerToTracker.shared_directory = this.fileTitles;
         peerToTracker.ip = this.ip;
@@ -162,21 +161,6 @@ public class Peer {
         }
     }
 
-    //constructor
-    public Peer(String registerOrLogin,String ip, int port, String username, String password) {
-        this.ip = ip;
-        this.port = port;
-        this.username = username;
-        this.password = password;
-        if(registerOrLogin.equals('R')){
-            register();
-        }else if(registerOrLogin.equals('L')){
-            login();
-        }else{
-            System.out.println("First Parameter must be set to R or L");
-        }
-    }
-
     /**
      * Server starts for Peers
      */
@@ -206,12 +190,34 @@ public class Peer {
         }
     }
 
+    //constructor
+    public Peer(String registerOrLogin,String ip, int port, String username, String password, String sharedDirectoryPath, String fineDownloadListPath) {
+        this.ip = ip;
+        this.port = port;
+        this.username = username;
+        this.password = password;
+        this.sharedDirectoryPath = sharedDirectoryPath;
+
+        // read file with files list
+
+
+        if(registerOrLogin.equals('R')){
+            register();
+        }else if(registerOrLogin.equals('L')){
+            login();
+        }else{
+            System.out.println("First Parameter must be set to R or L");
+        }
+    }
+
     public static void main(String[] args){
         try{
+            // Command Line Inputs:
             // 0: REGISTER/LOGIN, R or P respectively
-            // 1: ip
-            // 2 port
-            Peer p = new Peer(args[0], args[1],Integer.parseInt(args[2]), args[3], args[4]);
+            // 1: ip, 2: port
+            // 3: username, 4: password
+            // 5: shared_directory path 6: fileDownloadList.txt. path
+            Peer p = new Peer(args[0], args[1],Integer.parseInt(args[2]), args[3], args[4], args[5], args[6]);
             p.startServer();
 
         }catch (Exception e) {
