@@ -5,8 +5,14 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Scanner;
+
+import static java.lang.Integer.parseInt;
 
 public class Peer {
+    static final String trackerIp = "127.0.0.1";
+    static final int trackerPort = 5000;
+
     public int token_id;
 
     private String ip;
@@ -47,55 +53,34 @@ public class Peer {
         this.password = password;
     }
 
-    public void register(){
-        Socket socket = null;
-        ObjectOutputStream out = null;
-        ObjectInputStream in = null;
-        try {
-            socket = new Socket(ip, port);
-            System.out.printf("[PEER %d] Connected to broker on port %d , ip %s%n" ,getPort() , port , ip);
+    public void askForNewUserName(){
+        System.out.println("Please, choose a different username..");
+        Scanner scanner = new Scanner(System.in);
+        String username = scanner.nextLine();
+        setUsername(username);
+    }
+    public void askForNewUserNameAndPassword(){
+        System.out.println("Please, choose a different username and password..");
+        Scanner scanner = new Scanner(System.in);
+        String username = scanner.nextLine();
+        String password = scanner.nextLine();
+        setUsername(username);
+        setPassword(password);
 
-            out = new ObjectOutputStream(socket.getOutputStream());
-
-            PeerToTracker peerToTracker = new PeerToTracker();
-            peerToTracker.method = Method.REGISTER;
-            peerToTracker.username = username;
-            peerToTracker.password = password;
-
-            out.writeObject(peerToTracker);
-
-            in = new ObjectInputStream(socket.getInputStream());
-
-            AnyToPeer reply = (AnyToPeer) in.readObject();
-            if(reply.statusCode == StatusCode.UNSUCCESSFUL_REGISTER){
-                //TODO: zhtaei neo user name
-                register();
-            } else if(reply.statusCode == StatusCode.SUCCESSFUL_REGISTER){
-                //TODO: Rotaei thes na kaneis login? an pei nai login
-                Boolean login = true;
-                if(login) {
-                    login();
-                }
-            }
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
     }
 
-    public void login(){
+    public StatusCode login(){
         Socket socket = null;
         ObjectOutputStream out = null;
         ObjectInputStream in = null;
         try {
-            socket = new Socket(ip, port);
-            System.out.printf("[PEER %d] Connected to broker on port %d , ip %s%n" ,getPort() , port , ip);
+            socket = new Socket(trackerIp, trackerPort);
+            System.out.println("[PEER %d] Connected to Tracker on port "+trackerIp+" port "+trackerPort);
 
             out = new ObjectOutputStream(socket.getOutputStream());
+            in = new ObjectInputStream(socket.getInputStream());
 
+            // send login request to tracker
             PeerToTracker peerToTracker = new PeerToTracker();
             peerToTracker.method = Method.LOGIN;
             peerToTracker.username = username;
@@ -103,23 +88,70 @@ public class Peer {
 
             out.writeObject(peerToTracker);
 
-            in = new ObjectInputStream(socket.getInputStream());
             AnyToPeer reply = (AnyToPeer) in.readObject();
-            if (reply.statusCode == StatusCode.SUCCESSFUL_LOGIN){
+            System.out.println(reply.toString());
+
+            if (reply.statusCode == StatusCode.SUCCESSFUL_LOGIN) {
                 setToken_id(reply.token_id);
                 inform(out);
-            } else if (reply.statusCode == StatusCode.UNSUCCESSFUL_LOGIN){
-                //TODO: ksanavale username + password
-
+                return reply.statusCode;
+            } else if (reply.statusCode == StatusCode.UNSUCCESSFUL_LOGIN) {
+                return reply.statusCode;
             }
 
         } catch (UnknownHostException e) {
             e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
+        } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
+        try {
+            if (in != null) in.close();
+            if (out != null) out.close();
+            if (socket != null) socket.close();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return null;
+    }
+
+
+    public StatusCode register(){
+        Socket socket = null;
+        ObjectOutputStream out = null;
+        ObjectInputStream in = null;
+        try {
+            socket = new Socket(trackerIp, trackerPort);
+            System.out.println("[PEER %d] Connected to Tracker on port "+trackerIp+" port "+trackerPort);
+
+            out = new ObjectOutputStream(socket.getOutputStream());
+            in = new ObjectInputStream(socket.getInputStream());
+
+            // send request to Tracker
+            PeerToTracker peerToTracker = new PeerToTracker();
+            peerToTracker.method = Method.REGISTER;
+            peerToTracker.username = username;
+            peerToTracker.password = password;
+            out.writeObject(peerToTracker);
+
+            in = new ObjectInputStream(socket.getInputStream());
+
+            AnyToPeer reply = (AnyToPeer) in.readObject();
+            System.out.println(reply.toString());
+            return reply.statusCode;
+
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        try {
+            if (in != null) in.close();
+            if (out != null) out.close();
+            if (socket != null) socket.close();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return null;
     }
 
     public void inform(ObjectOutputStream out) throws IOException {
@@ -191,34 +223,67 @@ public class Peer {
     }
 
     //constructor
-    public Peer(String registerOrLogin,String ip, int port, String username, String password, String sharedDirectoryPath, String fineDownloadListPath) {
+    public Peer(String ip, int port, String username, String password, String sharedDirectoryPath, String fileDownloadListPath) {
         this.ip = ip;
         this.port = port;
         this.username = username;
         this.password = password;
         this.sharedDirectoryPath = sharedDirectoryPath;
 
-        // read file with files list
-
-
-        if(registerOrLogin.equals('R')){
-            register();
-        }else if(registerOrLogin.equals('L')){
-            login();
-        }else{
-            System.out.println("First Parameter must be set to R or L");
-        }
+        this.fileTitles = Util.readFileDownloadList(fileDownloadListPath);
     }
 
     public static void main(String[] args){
         try{
             // Command Line Inputs:
-            // 0: REGISTER/LOGIN, R or P respectively
-            // 1: ip, 2: port
-            // 3: username, 4: password
-            // 5: shared_directory path 6: fileDownloadList.txt. path
-            Peer p = new Peer(args[0], args[1],Integer.parseInt(args[2]), args[3], args[4], args[5], args[6]);
+            // 0: ip, 1: port
+            // 2: username, 3: password
+            // 4: shared_directory path 5: fileDownloadList.txt. path
+            System.out.println("Start...");
+            Peer p = new Peer(args[0], parseInt(args[1]), args[2], args[3], args[4], args[5]);
+            System.out.println("Start...");
             p.startServer();
+
+            boolean registered = false;
+            boolean loggedin = false;
+            System.out.println("Start...");
+            while(true){
+                System.out.println("Choose: \n0:regster \n1:login");
+                Scanner scanner = new Scanner(System.in);
+                String input = scanner.nextLine();
+                int func = parseInt(input);
+
+                // REGISTER
+                if(func==0 && registered==false) {
+                    StatusCode statusCode = p.register();
+                    if (statusCode != null) {
+                        if (statusCode == StatusCode.SUCCESSFUL_REGISTER) {
+                            registered = true;
+                        } else
+                            p.askForNewUserName();
+                    }
+                }else if(func==0 && registered==true){
+                    System.out.println("You are already registered");
+                }
+                // LOGIN
+                else if(func==1 && loggedin==false){
+                    StatusCode statusCode = p.login();
+                    if(statusCode!=null) {
+                        if (statusCode == StatusCode.SUCCESSFUL_LOGIN) {
+                            loggedin = true;
+                        } else {
+                            p.askForNewUserNameAndPassword();
+                        }
+                    }
+                }else if(func==1 && loggedin==true){
+                    System.out.println("You are already logged in");
+                }
+                // DOWNLOAD
+                else if(loggedin){
+                    //katevasma file
+                }
+
+            }
 
         }catch (Exception e) {
             System.out.println(e.getMessage());
