@@ -240,7 +240,7 @@ public class Peer {
         this.password = password;
         this.sharedDirectoryPath = sharedDirectoryPath;
 
-        this.fileTitles = Util.readFileDownloadList(fileDownloadListPath);
+        this.fileTitles = Util.readfiledownloadlist(fileDownloadListPath);
     }
 
     public static void main(String[] args){
