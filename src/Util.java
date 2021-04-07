@@ -6,13 +6,23 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 
 public class Util {
-    public static ArrayList<String> readFileDownloadList(String path){
 
-        ArrayList<String> array = new ArrayList<String>();
-        array.add("file1.txt");
-        array.add("file2.txt");
-        array.add("file3.txt");
-        return array;
+    public static ArrayList<String> readfiledownloadlist(String path){
+        ArrayList<String> allfiles = new ArrayList<String>();
+        Path pa = Paths.get(path);
+        File[] file = pa.toFile().listFiles();
+        if (file != null) {
+            for (File p : file) {
+                allfiles.add(p.getName());
+            }
+        }
+        return allfiles;
+
+//        ArrayList<String> array = new ArrayList<String>();
+//        array.add("file1.txt");
+//        array.add("file2.txt");
+//        array.add("file3.txt");
+//        return array;
     }
 
     public static byte[] loadFile (String path, String name){

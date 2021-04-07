@@ -32,7 +32,7 @@ public class Tracker {
         // 2: fineDownloadListPath
         this.ip = ip;
         this.port = port;
-        All_files = Util.readFileDownloadList(fileDownloadListPath);
+        All_files = Util.readfiledownloadlist(fileDownloadListPath);
 
         FillFiles_toToken();
         //TODO: Read TXT and fill the All_files array;
