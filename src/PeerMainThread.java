@@ -18,7 +18,7 @@ public class PeerMainThread extends Thread {
             //print menu
             System.out.println();
             System.out.println("----------------------------");
-            System.out.println("MENU: \n0: REGISTER \n1: LOGIN \n2: LOGOUT \n3: DETAILS \n4: SIMPLE_DOWNLOAD");
+            System.out.println("MENU: \n0: REGISTER \n1: LOGIN \n2: LOGOUT \n3: LIST");
             System.out.println("----------------------------");
             System.out.println();
 
@@ -31,31 +31,44 @@ public class PeerMainThread extends Thread {
                 // REGISTER
                 if (func == 0 && !registered) {
                     StatusCode statusCode = p.register();
-                    if (statusCode != null) {
-                        if (statusCode == StatusCode.SUCCESSFUL_REGISTER) {
-                            registered = true;
-                        } else
-                            p.askForNewUserName();
-                    }
+                    if (statusCode == StatusCode.SUCCESSFUL_REGISTER) {
+                        registered = true;
+                    } else
+                        p.askForNewUserName();
                 } else if (func == 0 && registered) {
                     System.out.println("You are already registered");
                 }
                 // LOGIN
                 else if (func == 1 && !loggedin) {
                     StatusCode statusCode = p.login();
-                    if (statusCode != null) {
-                        if (statusCode == StatusCode.SUCCESSFUL_LOGIN) {
-                            loggedin = true;
-                        } else {
-                            p.askForNewUserNameAndPassword();
-                        }
+                    if (statusCode == StatusCode.SUCCESSFUL_LOGIN) {
+                        loggedin = true;
+                    } else {
+                        p.askForNewUserNameAndPassword();
                     }
                 } else if (func == 1 && loggedin) {
                     System.out.println("You are already logged in");
                 }
-                // DOWNLOAD
-                else if (loggedin) {
-                    //katevasma file
+                //LOGOUT
+                else if(func == 2 && loggedin) {
+                    StatusCode statusCode = p.logout();
+                    if (statusCode == StatusCode.SUCCESSFUL_LOGOUT) {
+                        System.out.println("You logged out successfully");
+                        loggedin = false;
+                        p.setToken_id(-1);
+                    }else {
+                        System.out.println("You are still logged in.. Unsuccessful logout!");
+                    }
+                }
+                // LIST
+                else if (func == 2 &&  loggedin) {
+                    p.list();
+                    // TODO print all files
+
+                    scanner = new Scanner(System.in);
+                    input = scanner.nextLine(); //onoma arxeiou
+
+
                 }
             }
         }
