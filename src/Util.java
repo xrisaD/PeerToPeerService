@@ -17,7 +17,7 @@ public class Util {
             }
         }
         return allfiles;
-
+        //TODO check this method
 //        ArrayList<String> array = new ArrayList<String>();
 //        array.add("file1.txt");
 //        array.add("file2.txt");

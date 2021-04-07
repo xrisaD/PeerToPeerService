@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Tracker {
     ConcurrentHashMap<String, String> Registered_peers = new ConcurrentHashMap<String, String>();
     ConcurrentHashMap<Integer, Info> TokenId_toInfo = new ConcurrentHashMap<Integer, Info>();
-    ConcurrentHashMap<String, ArrayList<Integer>> Files_toToken = new ConcurrentHashMap<String, ArrayList<Integer>>();
+    ConcurrentHashMap<String, ConcurrentHashMap<Integer, Info>> Files_toInfo = new ConcurrentHashMap<String, ConcurrentHashMap<Integer, Info>>();
     ArrayList<Integer> All_tokenids = new ArrayList<Integer>();
     ArrayList<String> All_files = new ArrayList<String>();
     private final String ip;
@@ -113,10 +113,35 @@ public class Tracker {
                         FailureLogin(out);
                     }
                 } else if (req.method == Method.LOGOUT) {
+                    if(All_tokenids.contains(req.token_id)) {
+                        All_tokenids.remove(req.token_id);
+                        //TODO A LOT OF ERRORS, PLUS DO THE METHODS BELOW
+                        ArrayList<String> filesofremoved = TokenId_toInfo.get(req.token_id).Shared_directory;
+                        ConcurrentHashMap<Integer, Info> infoOfRemoved;
+                        TokenId_toInfo.remove(req.token_id);
+                        for(String i: filesofremoved){
+                            infoOfRemoved = Files_toInfo.get(i);
+                            infoOfRemoved.remove(req.token_id);
+                            if(infoOfRemoved)
+                                Files_toInfo.get(i).remove(req.token_id);
+                        }
+                        SuccessLogout(out);
+                    }else{
+                        FailureLogout(out);
+                    }
 
+                }   else if (req.method == Method.LIST) {
+                    replyList(out);
+                }   else if (req.method == Method.DETAILS) {
+                    ConcurrentHashMap<Integer, Info> peersWithFile =  Files_toInfo.get(req.fileName);
+                    if(!peersWithFile.isEmpty()) {
+                        replyDetails(out);
+                    }else{
+                        replyDetailsNot(out);
+                    }
                 }
 
-            } catch (IOException | ClassNotFoundException e) {
+                } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
             }
             try {
@@ -131,7 +156,7 @@ public class Tracker {
 
     public void FillFiles_toToken(){
         for(String i : All_files){
-            Files_toToken.put(i, new ArrayList<Integer>());
+            Files_toInfo.put(i, new ConcurrentHashMap<Integer, Info>());
         }
     }
 
@@ -170,4 +195,29 @@ public class Tracker {
         reply.statusCode = StatusCode.SUCCESSFUL_LOGIN;
         out.writeObject(reply);
     }
+
+    public void SuccessLogout(ObjectOutputStream out) throws IOException {
+        AnyToPeer reply = new AnyToPeer();
+        reply.statusCode = StatusCode.SUCCESSFUL_LOGOUT;
+        out.writeObject(reply);
+    }
+
+    public void FailureLogout(ObjectOutputStream out) throws IOException {
+        AnyToPeer reply = new AnyToPeer();
+        reply.statusCode = StatusCode.UNSUCCESSFUL_LOGOUT;
+        out.writeObject(reply);
+    }
+
+    public void replyList(ObjectOutputStream out) throws IOException {
+        AnyToPeer reply = new AnyToPeer();
+        reply.All_files = All_files;
+        out.writeObject(reply);
+    }
+
+    public void replyDetails(ObjectOutputStream out) throws IOException {
+        AnyToPeer reply = new AnyToPeer();
+        reply.All_files = All_files;
+        out.writeObject(reply);
+    }
+
 }
