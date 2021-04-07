@@ -24,4 +24,20 @@ class PeerToTracker implements Serializable{
 
     // notify
     public String peerName;
+
+    @Override
+    public String toString() {
+        return "PeerToTracker{" +
+                "method=" + method +
+                ", statusCode=" + statusCode +
+                ", username='" + username + '\'' +
+                ", password='" + password + '\'' +
+                ", token_id=" + token_id +
+                ", ip='" + ip + '\'' +
+                ", port=" + port +
+                ", shared_directory=" + shared_directory +
+                ", fileName='" + fileName + '\'' +
+                ", peerName='" + peerName + '\'' +
+                '}';
+    }
 }

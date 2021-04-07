@@ -4,10 +4,15 @@ import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Scanner;
+
+import static java.lang.Integer.parseInt;
 
 public class Peer {
+    static final String trackerIp = "127.0.0.1";
+    static final int trackerPort = 5000;
+
     public int token_id;
 
     private String ip;
@@ -17,6 +22,8 @@ public class Peer {
     public String password;
 
     public ArrayList<String> fileTitles;
+
+    public String sharedDirectoryPath;
 
     public String getIp() {
         return ip;
@@ -46,90 +53,118 @@ public class Peer {
         this.password = password;
     }
 
-    public void register(){
+    public void askForNewUserName(){
+        System.out.println("Please, choose a different username..");
+        Scanner scanner = new Scanner(System.in);
+        String username = scanner.nextLine();
+        setUsername(username);
+    }
+
+    public void askForNewUserNameAndPassword(){
+        System.out.println("Please, choose a different username and password..");
+        Scanner scanner = new Scanner(System.in);
+        String username = scanner.nextLine();
+        String password = scanner.nextLine();
+        setUsername(username);
+        setPassword(password);
+
+    }
+
+    public StatusCode login(){
         Socket socket = null;
         ObjectOutputStream out = null;
         ObjectInputStream in = null;
         try {
-            socket = new Socket(ip, port);
-            System.out.printf("[PEER %d] Connected to broker on port %d , ip %s%n" ,getPort() , port , ip);
+            socket = new Socket(trackerIp, trackerPort);
+            System.out.println("[PEER %d] Connected to Tracker on port "+trackerIp+" port "+trackerPort);
 
             out = new ObjectOutputStream(socket.getOutputStream());
+            in = new ObjectInputStream(socket.getInputStream());
 
+            // send login request to tracker
+            PeerToTracker peerToTracker = new PeerToTracker();
+            peerToTracker.method = Method.LOGIN;
+            peerToTracker.username = this.username;
+            peerToTracker.password = this.password;
+            peerToTracker.ip = this.ip;
+            peerToTracker.port = this.port;
+
+            out.writeObject(peerToTracker);
+
+            AnyToPeer reply = (AnyToPeer) in.readObject();
+            System.out.println(reply.toString());
+
+            if (reply.statusCode == StatusCode.SUCCESSFUL_LOGIN) {
+                setToken_id(reply.token_id);
+                inform(out);
+                return reply.statusCode;
+            } else if (reply.statusCode == StatusCode.UNSUCCESSFUL_LOGIN) {
+                return reply.statusCode;
+            }
+
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        try{
+            if (in != null) in.close();
+            if (out != null) out.close();
+            if (socket != null) socket.close();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return null;
+    }
+
+    public StatusCode register(){
+        Socket socket = null;
+        ObjectOutputStream out = null;
+        ObjectInputStream in = null;
+        try {
+            socket = new Socket(trackerIp, trackerPort);
+            System.out.println("[PEER %d] Connected to Tracker on port "+trackerIp+" port "+trackerPort);
+
+            out = new ObjectOutputStream(socket.getOutputStream());
+            in = new ObjectInputStream(socket.getInputStream());
+
+            // send request to Tracker
             PeerToTracker peerToTracker = new PeerToTracker();
             peerToTracker.method = Method.REGISTER;
             peerToTracker.username = username;
             peerToTracker.password = password;
-
             out.writeObject(peerToTracker);
 
-            in = new ObjectInputStream(socket.getInputStream());
-
             AnyToPeer reply = (AnyToPeer) in.readObject();
-            if(reply.statusCode == StatusCode.UNSUCCESSFUL_REGISTER){
-                //TODO: zhtaei neo user name
-                register();
-            } else if(reply.statusCode == StatusCode.SUCCESSFUL_REGISTER){
-                //TODO: Rotaei thes na kaneis login? an pei nai login
-                Boolean login = true;
-                if(login) {
-                    login();
-                }
-            }
+            System.out.println(reply.toString());
+            return reply.statusCode;
+
         } catch (UnknownHostException e) {
             e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
+        } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
-    }
-
-    public void login(){
-        Socket socket = null;
-        ObjectOutputStream out = null;
-        ObjectInputStream in = null;
         try {
-            socket = new Socket(ip, port);
-            System.out.printf("[PEER %d] Connected to broker on port %d , ip %s%n" ,getPort() , port , ip);
-
-            out = new ObjectOutputStream(socket.getOutputStream());
-
-            PeerToTracker peerToTracker = new PeerToTracker();
-            peerToTracker.method = Method.LOGIN;
-            peerToTracker.username = username;
-            peerToTracker.password = password;
-
-            out.writeObject(peerToTracker);
-
-            in = new ObjectInputStream(socket.getInputStream());
-            AnyToPeer reply = (AnyToPeer) in.readObject();
-            if (reply.statusCode == StatusCode.SUCCESSFUL_LOGIN){
-                setToken_id(reply.token_id);
-                list(out);
-            } else if (reply.statusCode == StatusCode.UNSUCCESSFUL_LOGIN){
-                //TODO: ksanavale username + password
-
-            }
-
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+            if (in != null) in.close();
+            if (out != null) out.close();
+            if (socket != null) socket.close();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
+        return null;
     }
-//    publci void logout(){
-//
-//    }
-    public void list(ObjectOutputStream out) throws IOException {
+
+    public void inform(ObjectOutputStream out) throws IOException {
         PeerToTracker peerToTracker = new PeerToTracker();
         peerToTracker.shared_directory = this.fileTitles;
         peerToTracker.ip = this.ip;
         peerToTracker.port = this.port;
         peerToTracker.username = this.username;
         out.writeObject(peerToTracker);
+    }
+
+    public boolean isActive(){
+        return token_id != -1;
     }
     public class PeerHandler extends Thread{
         Socket socket;
@@ -142,12 +177,18 @@ public class Peer {
             ObjectInputStream in = null;
             ObjectOutputStream out = null;
             try{
+                out = new ObjectOutputStream(socket.getOutputStream());
                 in = new ObjectInputStream(socket.getInputStream());
                 AnyToPeer req = (AnyToPeer) in.readObject();
 
                 System.out.printf("[PUBLISHER %s , %d] GOT REQUEST " + req.toString() , getIp() , getPort());
-                out = new ObjectOutputStream(socket.getOutputStream());
 
+
+                if(req.method == Method.CHECK_ACTIVE){
+
+                }else if(req.method == Method.SIMPLE_DOWNLOAD){
+                    // elegxos an exei to arxeio
+                }
             } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
             }
@@ -159,21 +200,6 @@ public class Peer {
             catch(Exception e){
                 throw new RuntimeException(e);
             }
-        }
-    }
-
-    //constructor
-    public Peer(String registerOrLogin,String ip, int port, String username, String password) {
-        this.ip = ip;
-        this.port = port;
-        this.username = username;
-        this.password = password;
-        if(registerOrLogin.equals('R')){
-            register();
-        }else if(registerOrLogin.equals('L')){
-            login();
-        }else{
-            System.out.println("First Parameter must be set to R or L");
         }
     }
 
@@ -206,12 +232,32 @@ public class Peer {
         }
     }
 
+    //constructor
+    public Peer(String ip, int port, String username, String password, String sharedDirectoryPath, String fileDownloadListPath) {
+        this.ip = ip;
+        this.port = port;
+        this.username = username;
+        this.password = password;
+        this.sharedDirectoryPath = sharedDirectoryPath;
+
+        this.fileTitles = Util.readFileDownloadList(fileDownloadListPath);
+    }
+
     public static void main(String[] args){
         try{
-            // 0: REGISTER/LOGIN, R or P respectively
-            // 1: ip
-            // 2 port
-            Peer p = new Peer(args[0], args[1],Integer.parseInt(args[2]), args[3], args[4]);
+            // Command Line Inputs:
+            // 0: ip, 1: port
+            // 2: username, 3: password
+            // 4: shared_directory path 5: fileDownloadList.txt. path
+            System.out.println("Start...");
+            Peer p = new Peer(args[0], parseInt(args[1]), args[2], args[3], args[4], args[5]);
+
+            System.out.println("Start Peer's thread for command line requests... ");
+            PeerMainThread peerMainThread = new PeerMainThread(p);
+            peerMainThread.start();
+
+
+            System.out.println("Start...");
             p.startServer();
 
         }catch (Exception e) {
@@ -219,6 +265,4 @@ public class Peer {
             e.printStackTrace();
         }
     }
-
-
 }
