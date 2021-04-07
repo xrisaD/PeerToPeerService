@@ -1,0 +1,8 @@
+Tracker:
+java Tracker 127.0.0.1 5000 path
+
+
+Peer1:
+java Peer 127.0.0.1 5001 xrisa diko C:\Users\Xrisa\IdeaProjects\Sockets-ComputerNetworks\testData\peer1\shared_directory C:\Users\Xrisa\IdeaProjects\Sockets-ComputerNetworks\testData\peer1
+
+java Peer 127.0.0.1 5004 xrisa diko C:\Users\Xrisa\IdeaProjects\Sockets-ComputerNetworks\testData\peer1\shared_directory C:\Users\Xrisa\IdeaProjects\Sockets-ComputerNetworks\testData\peer1

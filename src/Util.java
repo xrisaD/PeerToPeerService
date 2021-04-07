@@ -25,6 +25,8 @@ public class Util {
 //        return array;
     }
 
+    // TODO Peer ArrayList<String>
+
     public static byte[] loadFile (String path, String name){
         System.out.printf("Loading file: %s",name);
         // file to bytes[]
