@@ -114,7 +114,6 @@ public class Peer {
         return null;
     }
 
-
     public StatusCode register(){
         Socket socket = null;
         ObjectOutputStream out = null;
@@ -240,7 +239,7 @@ public class Peer {
             System.out.println("Start...");
             Peer p = new Peer(args[0], parseInt(args[1]), args[2], args[3], args[4], args[5]);
 
-            System.out.println("Start...");
+            System.out.println("Start Peer's thread for command line requests... ");
             PeerMainThread peerMainThread = new PeerMainThread(p);
             peerMainThread.start();
 
@@ -251,56 +250,6 @@ public class Peer {
         }catch (Exception e) {
             System.out.println(e.getMessage());
             e.printStackTrace();
-        }
-    }
-
-    public static class PeerMainThread extends Thread {
-        Peer p;
-        PeerMainThread(Peer p){
-            this.p = p;
-        }
-        @Override
-        public void run() {
-            boolean registered = false;
-            boolean loggedin = false;
-            System.out.println("Start...");
-            while(true){
-                System.out.println("Choose: \n0:regster \n1:login");
-                Scanner scanner = new Scanner(System.in);
-                String input = scanner.nextLine();
-                int func = parseInt(input);
-
-                // REGISTER
-                if(func==0 && registered==false) {
-                    StatusCode statusCode = p.register();
-                    if (statusCode != null) {
-                        if (statusCode == StatusCode.SUCCESSFUL_REGISTER) {
-                            registered = true;
-                        } else
-                            p.askForNewUserName();
-                    }
-                }else if(func==0 && registered==true){
-                    System.out.println("You are already registered");
-                }
-                // LOGIN
-                else if(func==1 && loggedin==false){
-                    StatusCode statusCode = p.login();
-                    if(statusCode!=null) {
-                        if (statusCode == StatusCode.SUCCESSFUL_LOGIN) {
-                            loggedin = true;
-                        } else {
-                            p.askForNewUserNameAndPassword();
-                        }
-                    }
-                }else if(func==1 && loggedin==true){
-                    System.out.println("You are already logged in");
-                }
-                // DOWNLOAD
-                else if(loggedin){
-                    //katevasma file
-                }
-
-            }
         }
     }
 }
