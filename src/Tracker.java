@@ -11,12 +11,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 
 public class Tracker {
-    ConcurrentHashMap<String, String> Registered_peers;
-    ConcurrentHashMap<Integer, Info> TokenId_toInfo;
-    ConcurrentHashMap<File, ArrayList<Integer>> Files_toToken;
-    ArrayList<Integer> All_tokenids;
-    ArrayList<File> All_files;
-    private String ip;
+    ConcurrentHashMap<String, String> Registered_peers = new ConcurrentHashMap<String, String>();
+    ConcurrentHashMap<Integer, Info> TokenId_toInfo = new ConcurrentHashMap<Integer, Info>();
+    ConcurrentHashMap<String, ArrayList<Integer>> Files_toToken = new ConcurrentHashMap<String, ArrayList<Integer>>();
+    ArrayList<Integer> All_tokenids = new ArrayList<Integer>();
+    ArrayList<String> All_files = new ArrayList<String>();
+    private final String ip;
+    private final int port;
 
     public String getIp() {
         return ip;
@@ -26,13 +27,13 @@ public class Tracker {
         return port;
     }
 
-    private int port;
-
-    public Tracker(String ip, int port, String path) {
+    public Tracker(String ip, int port, String fileDownloadListPath) {
+        // 0: ip, 1: port
+        // 2: fineDownloadListPath
         this.ip = ip;
         this.port = port;
-        Path Realpath = Paths.get(path);
-        All_files = Util.Readfiledownloadlist(Realpath);
+        All_files = Util.readFileDownloadList(fileDownloadListPath);
+
         FillFiles_toToken();
         //TODO: Read TXT and fill the All_files array;
     }
@@ -47,7 +48,7 @@ public class Tracker {
                 connection = providerSocket.accept();
                 //We start a thread
                 //this thread will do the communication
-                ΤrackerHandler ph = new ΤrackerHandler(connection);
+                TrackerHandler ph = new TrackerHandler(connection);
                 ph.start();
             }
         } catch (IOException e) {
@@ -73,10 +74,10 @@ public class Tracker {
         }
     }
 
-    public class ΤrackerHandler extends Thread {
+    public class TrackerHandler extends Thread {
         Socket socket;
 
-        public ΤrackerHandler(Socket socket) {
+        public TrackerHandler(Socket socket) {
             this.socket = socket;
         }
 
@@ -85,22 +86,23 @@ public class Tracker {
             ObjectInputStream in = null;
             ObjectOutputStream out = null;
             try {
+                out = new ObjectOutputStream(socket.getOutputStream());
                 in = new ObjectInputStream(socket.getInputStream());
+
                 PeerToTracker req = (PeerToTracker) in.readObject();
                 System.out.printf("[Tracker %s , %d] GOT REQUEST " + req.toString(), getIp(), getPort());
-                out = new ObjectOutputStream(socket.getOutputStream());
 
                 if (req.method == Method.REGISTER) {
                     if (Registered_peers.containsKey(req.username)) {
-                        FailureRegister(req, out);
+                        FailureRegister(out);
                     } else {
                         Registered_peers.put(req.username, req.password);
-                        SuccessRegister(req, out);
+                        SuccessRegister(out);
                     }
                 } else if (req.method == Method.LOGIN) {
                     if (Registered_peers.containsKey(req.username) && Registered_peers.get(req.username).equals(req.password)) {
                         int token_id = getRandomTokenId();
-                        SuccessLogin(req, out, token_id);
+                        SuccessLogin(out, token_id);
                         //in = new ObjectInputStream(socket.getInputStream());  //TODO CHECK IF IT IS WORKING
                         PeerToTracker secondinput = (PeerToTracker) in.readObject();
                         System.out.printf("[Tracker %s , %d] GOT SHARED_DIRECTORY " + req.toString(), getIp(), getPort());
@@ -108,7 +110,7 @@ public class Tracker {
                         TokenId_toInfo.put(token_id, peerinfo);
                         //TODO FILL Files_toToken array .
                     } else {
-                        FailureLogin(req, out);
+                        FailureLogin(out);
                     }
                 } else if (req.method == Method.LOGOUT) {
 
@@ -128,7 +130,7 @@ public class Tracker {
     }
 
     public void FillFiles_toToken(){
-        for(File i : All_files){
+        for(String i : All_files){
             Files_toToken.put(i, new ArrayList<Integer>());
         }
     }
@@ -143,25 +145,25 @@ public class Tracker {
         return tokenid;
     }
 
-    public void FailureRegister(PeerToTracker req, ObjectOutputStream out) throws IOException {
+    public void FailureRegister(ObjectOutputStream out) throws IOException {
         AnyToPeer reply = new AnyToPeer();
         reply.statusCode = StatusCode.UNSUCCESSFUL_REGISTER;
         out.writeObject(reply);
     }
 
-    public void SuccessRegister(PeerToTracker req, ObjectOutputStream out) throws IOException {
+    public void SuccessRegister(ObjectOutputStream out) throws IOException {
         AnyToPeer reply = new AnyToPeer();
         reply.statusCode = StatusCode.SUCCESSFUL_REGISTER;
         out.writeObject(reply);
     }
 
-    public void FailureLogin(PeerToTracker req, ObjectOutputStream out) throws IOException {
+    public void FailureLogin(ObjectOutputStream out) throws IOException {
         AnyToPeer reply = new AnyToPeer();
         reply.statusCode = StatusCode.UNSUCCESSFUL_LOGIN;
         out.writeObject(reply);
     }
 
-    public void SuccessLogin(PeerToTracker req, ObjectOutputStream out, int token) throws IOException {
+    public void SuccessLogin(ObjectOutputStream out, int token) throws IOException {
         AnyToPeer reply = new AnyToPeer();
         All_tokenids.add(token);
         reply.token_id = token;

@@ -1,5 +1,6 @@
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class AnyToPeer implements Serializable {
     public Method method;
@@ -9,5 +10,14 @@ public class AnyToPeer implements Serializable {
     ArrayList<String> All_files;
     ArrayList<Info> Peer_Info;
 
-
+    @Override
+    public String toString() {
+        return "AnyToPeer{" +
+                "method=" + method +
+                ", statusCode=" + statusCode +
+                ", token_id=" + token_id +
+                ", All_files=" + All_files +
+                ", Peer_Info=" + Peer_Info +
+                '}';
+    }
 }
