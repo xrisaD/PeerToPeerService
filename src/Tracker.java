@@ -129,8 +129,14 @@ public class Tracker {
                     replyList(out);
                 }   else if (req.method == Method.DETAILS) {
                     ConcurrentHashMap<Integer, Info> peersWithFile =  Files_toInfo.get(req.fileName);
+                    // TODO we need a for loop to check all peers with file, sent them CheckActive, If it is not active remove.
+//                    for(int i=0; i<peersWithFile.size(); i++){
+//                        Sent checkactive
+//                        If it is not active remove from peersWithFile
+//                        Delete tokenid from data structures
+//                    }
                     if(!peersWithFile.isEmpty()) {
-                        replyDetails(out);
+                        replyDetails(out, peersWithFile);
                     }else{
                         replyDetailsNot(out);
                     }
@@ -209,9 +215,9 @@ public class Tracker {
         out.writeObject(reply);
     }
 
-    public void replyDetails(ObjectOutputStream out) throws IOException {
+    public void replyDetails(ObjectOutputStream out, ConcurrentHashMap<Integer, Info> withFile) throws IOException {
         AnyToPeer reply = new AnyToPeer();
-        reply.All_files = All_files;
+        reply.peersWithFile = withFile;
         out.writeObject(reply);
     }
 

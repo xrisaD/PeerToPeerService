@@ -1,6 +1,7 @@
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class AnyToPeer implements Serializable {
     public Method method;
@@ -9,6 +10,8 @@ public class AnyToPeer implements Serializable {
     public int token_id;
     ArrayList<String> All_files;
     ArrayList<Info> Peer_Info;
+    // Details reply from tracker
+    ConcurrentHashMap<Integer, Info> peersWithFile;
 
     @Override
     public String toString() {
