@@ -59,6 +59,7 @@ public class Peer {
         String username = scanner.nextLine();
         setUsername(username);
     }
+
     public void askForNewUserNameAndPassword(){
         System.out.println("Please, choose a different username and password..");
         Scanner scanner = new Scanner(System.in);
@@ -83,8 +84,10 @@ public class Peer {
             // send login request to tracker
             PeerToTracker peerToTracker = new PeerToTracker();
             peerToTracker.method = Method.LOGIN;
-            peerToTracker.username = username;
-            peerToTracker.password = password;
+            peerToTracker.username = this.username;
+            peerToTracker.password = this.password;
+            peerToTracker.ip = this.ip;
+            peerToTracker.port = this.port;
 
             out.writeObject(peerToTracker);
 
@@ -159,6 +162,10 @@ public class Peer {
         peerToTracker.username = this.username;
         out.writeObject(peerToTracker);
     }
+
+    public boolean isActive(){
+        return token_id != -1;
+    }
     public class PeerHandler extends Thread{
         Socket socket;
         public PeerHandler(Socket socket){
@@ -170,12 +177,18 @@ public class Peer {
             ObjectInputStream in = null;
             ObjectOutputStream out = null;
             try{
+                out = new ObjectOutputStream(socket.getOutputStream());
                 in = new ObjectInputStream(socket.getInputStream());
                 AnyToPeer req = (AnyToPeer) in.readObject();
 
                 System.out.printf("[PUBLISHER %s , %d] GOT REQUEST " + req.toString() , getIp() , getPort());
-                out = new ObjectOutputStream(socket.getOutputStream());
 
+
+                if(req.method == Method.CHECK_ACTIVE){
+
+                }else if(req.method == Method.SIMPLE_DOWNLOAD){
+                    // elegxos an exei to arxeio
+                }
             } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
             }

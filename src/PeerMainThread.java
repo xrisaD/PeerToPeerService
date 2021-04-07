@@ -11,13 +11,14 @@ public class PeerMainThread extends Thread {
     public void run() {
         boolean registered = false;
         boolean loggedin = false;
-        System.out.println("Start...");
+        System.out.println("Start PeerMainThread...");
         while(true){
 
+            System.out.println(p.getIp()+p.getPort());
             //print menu
             System.out.println();
             System.out.println("----------------------------");
-            System.out.println("MENU: \n0: REGISTER \n1: LOGIN \n 2: LOGOUT \n 3: DETAILS \n 4: SIMPLE_DOWNLOAD");
+            System.out.println("MENU: \n0: REGISTER \n1: LOGIN \n2: LOGOUT \n3: DETAILS \n4: SIMPLE_DOWNLOAD");
             System.out.println("----------------------------");
             System.out.println();
 
