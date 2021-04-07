@@ -1,21 +1,18 @@
-import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 
 
 public class Tracker {
-    ConcurrentHashMap<String, String> Registered_peers = new ConcurrentHashMap<String, String>();
-    ConcurrentHashMap<Integer, Info> TokenId_toInfo = new ConcurrentHashMap<Integer, Info>();
-    ConcurrentHashMap<String, ConcurrentHashMap<Integer, Info>> Files_toInfo = new ConcurrentHashMap<String, ConcurrentHashMap<Integer, Info>>();
-    ArrayList<Integer> All_tokenids = new ArrayList<Integer>();
-    ArrayList<String> All_files = new ArrayList<String>();
+    ConcurrentHashMap<String, String> Registered_peers = new ConcurrentHashMap<>();
+    ConcurrentHashMap<Integer, Info> TokenId_toInfo = new ConcurrentHashMap<>();
+    ConcurrentHashMap<String, ConcurrentHashMap<Integer, Info>> Files_toInfo = new ConcurrentHashMap<>();
+    ArrayList<Integer> All_tokenIds = new ArrayList<>();
+    ArrayList<String> All_files;
     private final String ip;
     private final int port;
 
@@ -35,7 +32,6 @@ public class Tracker {
         All_files = Util.readfiledownloadlist(fileDownloadListPath);
 
         FillFiles_toToken();
-        //TODO: Read TXT and fill the All_files array;
     }
 
     public void startServer() {
@@ -103,27 +99,26 @@ public class Tracker {
                     if (Registered_peers.containsKey(req.username) && Registered_peers.get(req.username).equals(req.password)) {
                         int token_id = getRandomTokenId();
                         SuccessLogin(out, token_id);
-                        //in = new ObjectInputStream(socket.getInputStream());  //TODO CHECK IF IT IS WORKING
-                        PeerToTracker secondinput = (PeerToTracker) in.readObject();
-                        System.out.printf("[Tracker %s , %d] GOT SHARED_DIRECTORY " + req.toString(), getIp(), getPort());
-                        Info peerinfo = new Info(secondinput.ip, secondinput.port, secondinput.username, secondinput.shared_directory);
-                        TokenId_toInfo.put(token_id, peerinfo);
-                        //TODO FILL Files_toToken array .
+//                        in = new ObjectInputStream(socket.getInputStream());  //TODO CHECK IF IT IS WORKING
+                        PeerToTracker secondInput = (PeerToTracker) in.readObject();
+                        System.out.printf("[Tracker %s , %d] GOT PEER INFO " + req.toString(), getIp(), getPort());
+                        Info peerInfo = new Info(secondInput.ip, secondInput.port, secondInput.username, secondInput.shared_directory);
+                        TokenId_toInfo.put(token_id, peerInfo);
+                        // Fills Files_toToken array.
+                        for(String i: peerInfo.Shared_directory){
+                            Files_toInfo.get(i).put(token_id, peerInfo);
+                        }
                     } else {
                         FailureLogin(out);
                     }
                 } else if (req.method == Method.LOGOUT) {
-                    if(All_tokenids.contains(req.token_id)) {
-                        All_tokenids.remove(req.token_id);
-                        //TODO A LOT OF ERRORS, PLUS DO THE METHODS BELOW
-                        ArrayList<String> filesofremoved = TokenId_toInfo.get(req.token_id).Shared_directory;
-                        ConcurrentHashMap<Integer, Info> infoOfRemoved;
+                    if(All_tokenIds.contains(req.token_id)) {
+                        All_tokenIds.remove(req.token_id);
+                        ArrayList<String> filesOfRemoved = TokenId_toInfo.get(req.token_id).Shared_directory;
                         TokenId_toInfo.remove(req.token_id);
-                        for(String i: filesofremoved){
-                            infoOfRemoved = Files_toInfo.get(i);
-                            infoOfRemoved.remove(req.token_id);
-                            if(infoOfRemoved)
-                                Files_toInfo.get(i).remove(req.token_id);
+                        for(String i: filesOfRemoved){
+                            // It removes from Files_toInfo all the Shared_directory files in the Concurrent hashmap with key "req.token_id" which is the token given from the peer.
+                            Files_toInfo.get(i).remove(req.token_id);
                         }
                         SuccessLogout(out);
                     }else{
@@ -141,7 +136,7 @@ public class Tracker {
                     }
                 }
 
-                } catch (IOException | ClassNotFoundException e) {
+            } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
             }
             try {
@@ -164,7 +159,7 @@ public class Tracker {
         int min=0;
         int max=100;
         int tokenid = 0;
-        while(All_tokenids.contains(tokenid)) {
+        while(All_tokenIds.contains(tokenid)) {
             tokenid = (int) ((Math.random() * (max - min)) + min);
         }
         return tokenid;
@@ -190,7 +185,7 @@ public class Tracker {
 
     public void SuccessLogin(ObjectOutputStream out, int token) throws IOException {
         AnyToPeer reply = new AnyToPeer();
-        All_tokenids.add(token);
+        All_tokenIds.add(token);
         reply.token_id = token;
         reply.statusCode = StatusCode.SUCCESSFUL_LOGIN;
         out.writeObject(reply);
@@ -217,6 +212,12 @@ public class Tracker {
     public void replyDetails(ObjectOutputStream out) throws IOException {
         AnyToPeer reply = new AnyToPeer();
         reply.All_files = All_files;
+        out.writeObject(reply);
+    }
+
+    public void replyDetailsNot(ObjectOutputStream out) throws IOException {
+        AnyToPeer reply = new AnyToPeer();
+        reply.statusCode = StatusCode.FILE_NOTFOUND;
         out.writeObject(reply);
     }
 
