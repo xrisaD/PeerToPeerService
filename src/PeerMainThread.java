@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Scanner;
 
 import static java.lang.Integer.parseInt;
@@ -9,6 +11,7 @@ public class PeerMainThread extends Thread {
     }
     @Override
     public void run() {
+        System.out.println("Start Peer's thread for command line requests... ");
         boolean registered = false;
         boolean loggedin = false;
         System.out.println("Start PeerMainThread...");
@@ -61,16 +64,35 @@ public class PeerMainThread extends Thread {
                     }
                 }
                 // LIST
-                else if (func == 2 &&  loggedin) {
-                    p.list();
-                    // TODO print all files
-
-                    scanner = new Scanner(System.in);
-                    input = scanner.nextLine(); //onoma arxeiou
-
-
+                else if (func == 3 &&  loggedin) {
+                    ArrayList<String> allFiles = p.list();
+                    String fileName = printAllFilesListAndAskForASpecificFile(allFiles);
+                    p.details(fileName);
+                    p.simpleDownload();
+                }
+                else if(!loggedin){ //func=2,3
+                    System.out.println("You are not logged in");
                 }
             }
         }
+    }
+    public String printAllFilesListAndAskForASpecificFile(ArrayList<String> allFiles){
+        HashMap<Integer,String> numberToFile = new HashMap<Integer,String>();
+        System.out.println("Available files: (Enter the number of the file you want to download)");
+        for(int i = 0; i < allFiles.size(); i++){
+            String fileName = allFiles.get(i);
+            numberToFile.put(i, fileName);
+            System.out.println(i + " : " + fileName);
+        }
+
+        Scanner scanner = new Scanner(System.in);
+
+        String number = scanner.nextLine();
+        int fileNumber = Integer.parseInt(number);
+        while(fileNumber<0 || fileNumber>=allFiles.size()) {
+            number = scanner.nextLine();
+            fileNumber = Integer.parseInt(number);
+        }
+        return numberToFile.get(fileNumber);
     }
 }
