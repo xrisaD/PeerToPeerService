@@ -14,7 +14,6 @@ public class Peer {
     static final int trackerPort = 5000;
 
     public int token_id;
-
     private String ip;
     private int port;
 
@@ -355,7 +354,7 @@ public class Peer {
         this.password = password;
         this.sharedDirectoryPath = sharedDirectoryPath;
 
-        this.fileTitles = Util.readfiledownloadlist(fileDownloadListPath);
+        this.fileTitles = Util.readSharedDirectory(fileDownloadListPath);
     }
 
     public static void main(String[] args){
