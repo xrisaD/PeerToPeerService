@@ -8,5 +8,6 @@ public enum StatusCode {
     UNSUCCESSFUL_LOGOUT,
     FILE_NOTFOUND,
     FILE_FOUND,
-    PEER_ISACTIVE
+    PEER_ISACTIVE,
+    PEER_ISNOTACTIVE
 }
