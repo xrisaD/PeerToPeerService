@@ -9,4 +9,5 @@ public enum StatusCode {
     FILE_NOTFOUND,
     FILE_FOUND,
     PEER_ISACTIVE,
+    PEER_ISNOTACTIVE
 }

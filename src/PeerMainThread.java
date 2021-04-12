@@ -67,8 +67,8 @@ public class PeerMainThread extends Thread {
                 else if (func == 3 &&  loggedin) {
                     ArrayList<String> allFiles = p.list();
                     String fileName = printAllFilesListAndAskForASpecificFile(allFiles);
-                    p.details(fileName);
-                    p.simpleDownload();
+                    ArrayList<Info> peers = p.details(fileName);
+                    p.simpleDownload(fileName, peers);
                 }
                 else if(!loggedin){ //func=2,3
                     System.out.println("You are not logged in");
