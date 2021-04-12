@@ -3,7 +3,9 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 
@@ -129,17 +131,29 @@ public class Tracker {
                     replyList(out);
                 }   else if (req.method == Method.DETAILS) {
                     ConcurrentHashMap<Integer, Info> peersWithFile =  Files_toInfo.get(req.fileName);
-                    // TODO we need a for loop to check all peers with file, sent them CheckActive, If it is not active remove.
-//                    for(int i=0; i<peersWithFile.size(); i++){
-//                        Sent checkactive
-//                        If it is not active remove from peersWithFile
-//                        Delete tokenid from data structures
-//                    }
+                    ArrayList<Info> activeFiles = new ArrayList<>();
+                    for(Map.Entry<Integer, Info> i : peersWithFile.entrySet()){
+                        StatusCode status = checkActive(i.getValue().ip, i.getValue().port);
+                        if(!status.equals(StatusCode.PEER_ISACTIVE)){
+                            All_tokenIds.remove(i.getKey());
+                            ArrayList<String> filesOfRemoved = TokenId_toInfo.get(i.getKey()).Shared_directory;
+                            TokenId_toInfo.remove(i.getKey());
+                            for(String j: filesOfRemoved){
+                                // It removes from Files_toInfo all the Shared_directory files in the Concurrent hashmap with key "req.token_id" which is the token given from the peer.
+                                Files_toInfo.get(j).remove(i.getKey());
+                            }
+                            peersWithFile.remove(i);
+                        }else{
+                            activeFiles.add(i.getValue());
+                        }
+                    }
                     if(!peersWithFile.isEmpty()) {
-                        replyDetails(out, peersWithFile);
+                        replyDetails(out, activeFiles);
                     }else{
                         replyDetailsNot(out);
                     }
+                }   else if (req.method == Method.NOTIFY_SUCCESSFUL) {
+
                 }
 
             } catch (IOException | ClassNotFoundException e) {
@@ -153,6 +167,40 @@ public class Tracker {
                 throw new RuntimeException(e);
             }
         }
+    }
+
+    public static StatusCode checkActive(String peerIp, int peerPort){
+        Socket socket = null;
+        ObjectOutputStream out = null;
+        ObjectInputStream in = null;
+        try {
+            socket = new Socket(peerIp, peerPort);
+            System.out.println("[PEER %d] Any connected to peer on port "+peerIp+" port "+peerPort);
+
+            out = new ObjectOutputStream(socket.getOutputStream());
+            in = new ObjectInputStream(socket.getInputStream());
+
+            // send login request to tracker
+            AnyToPeer anytopeer = new AnyToPeer();
+            anytopeer.method = Method.CHECK_ACTIVE;
+
+            out.writeObject(anytopeer);
+
+            PeerToTracker reply = (PeerToTracker) in.readObject();
+            System.out.println(reply.toString());
+
+            return reply.statusCode;
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        try{
+            if (in != null) in.close();
+            if (out != null) out.close();
+            if (socket != null) socket.close();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return null;
     }
 
     public void FillFiles_toToken(){
@@ -215,9 +263,9 @@ public class Tracker {
         out.writeObject(reply);
     }
 
-    public void replyDetails(ObjectOutputStream out, ConcurrentHashMap<Integer, Info> withFile) throws IOException {
+    public void replyDetails(ObjectOutputStream out, ArrayList<Info> withFile) throws IOException {
         AnyToPeer reply = new AnyToPeer();
-        reply.peersWithFile = withFile;
+        reply.Peer_Info = withFile;
         out.writeObject(reply);
     }
 

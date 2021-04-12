@@ -149,53 +149,6 @@ public class Peer {
         return null;
     }
 
-    public StatusCode login(){
-        Socket socket = null;
-        ObjectOutputStream out = null;
-        ObjectInputStream in = null;
-        try {
-            socket = new Socket(trackerIp, trackerPort);
-            System.out.println("[PEER %d] Connected to Tracker on port "+trackerIp+" port "+trackerPort);
-
-            out = new ObjectOutputStream(socket.getOutputStream());
-            in = new ObjectInputStream(socket.getInputStream());
-
-            // send login request to tracker
-            PeerToTracker peerToTracker = new PeerToTracker();
-            peerToTracker.method = Method.LOGIN;
-            peerToTracker.username = this.username;
-            peerToTracker.password = this.password;
-            peerToTracker.ip = this.ip;
-            peerToTracker.port = this.port;
-
-            out.writeObject(peerToTracker);
-
-            AnyToPeer reply = (AnyToPeer) in.readObject();
-            System.out.println(reply.toString());
-
-            if (reply.statusCode == StatusCode.SUCCESSFUL_LOGIN) {
-                setToken_id(reply.token_id);
-                inform(out);
-                return reply.statusCode;
-            } else if (reply.statusCode == StatusCode.UNSUCCESSFUL_LOGIN) {
-                return reply.statusCode;
-            }
-
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-        try{
-            if (in != null) in.close();
-            if (out != null) out.close();
-            if (socket != null) socket.close();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        return null;
-    }
-
     public StatusCode logout(){
         Socket socket = null;
         ObjectOutputStream out = null;
@@ -276,6 +229,40 @@ public class Peer {
         peerToTracker.port = this.port;
         peerToTracker.username = this.username;
         out.writeObject(peerToTracker);
+    }
+
+    public static StatusCode checkActive(String peerIp, int peerPort){
+        Socket socket = null;
+        ObjectOutputStream out = null;
+        ObjectInputStream in = null;
+        try {
+            socket = new Socket(peerIp, peerPort);
+            System.out.println("[PEER %d] Any connected to peer on port "+peerIp+" port "+peerPort);
+
+            out = new ObjectOutputStream(socket.getOutputStream());
+            in = new ObjectInputStream(socket.getInputStream());
+
+            // send login request to tracker
+            AnyToPeer anytopeer = new AnyToPeer();
+            anytopeer.method = Method.CHECK_ACTIVE;
+
+            out.writeObject(anytopeer);
+
+            AnyToPeer reply = (AnyToPeer) in.readObject();
+            System.out.println(reply.toString());
+
+            return reply.statusCode;
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        try{
+            if (in != null) in.close();
+            if (out != null) out.close();
+            if (socket != null) socket.close();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return null;
     }
 
     public boolean isActive(){

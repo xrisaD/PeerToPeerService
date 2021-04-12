@@ -11,7 +11,6 @@ public class AnyToPeer implements Serializable {
     ArrayList<String> All_files;
     ArrayList<Info> Peer_Info;
     // Details reply from tracker
-    ConcurrentHashMap<Integer, Info> peersWithFile;
 
     @Override
     public String toString() {
