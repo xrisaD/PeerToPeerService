@@ -31,7 +31,7 @@ public class Tracker {
         // 2: fineDownloadListPath
         this.ip = ip;
         this.port = port;
-        All_files = Util.readfiledownloadlist(fileDownloadListPath);
+        All_files = Util.readFileDownloadList(fileDownloadListPath);
 
         FillFiles_toToken();
     }

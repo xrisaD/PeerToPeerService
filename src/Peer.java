@@ -14,7 +14,6 @@ public class Peer {
     static final int trackerPort = 5000;
 
     public int token_id;
-
     private String ip;
     private int port;
 
@@ -53,6 +52,12 @@ public class Peer {
         this.password = password;
     }
 
+    public boolean isActive(){
+        return token_id != -1;
+    }
+
+
+    // input methods
     public void askForNewUserName(){
         System.out.println("Please, choose a different username..");
         Scanner scanner = new Scanner(System.in);
@@ -70,18 +75,20 @@ public class Peer {
 
     }
 
+    // request methods
+
+    // get details for peers that have a specific file
     public  ArrayList<Info> details(String fileName){
         Socket socket = null;
         ObjectOutputStream out = null;
         ObjectInputStream in = null;
         try {
             socket = new Socket(trackerIp, trackerPort);
-            System.out.println("[PEER %d] Connected to Tracker on port "+trackerIp+" port "+trackerPort);
+            System.out.println("PEER Connected to Tracker on port "+trackerIp+" port "+trackerPort);
 
             out = new ObjectOutputStream(socket.getOutputStream());
             in = new ObjectInputStream(socket.getInputStream());
 
-            // send login request to tracker
             PeerToTracker peerToTracker = new PeerToTracker();
             peerToTracker.method = Method.DETAILS;
             peerToTracker.fileName = fileName;
@@ -89,9 +96,9 @@ public class Peer {
             out.writeObject(peerToTracker);
 
             AnyToPeer reply = (AnyToPeer) in.readObject();
-            System.out.println(reply.toString());
+            System.out.println("REPLY: "+reply.toString());
 
-            if (reply.statusCode == StatusCode.FILE_NOTFOUND){
+            if (reply.statusCode == StatusCode.FILE_FOUND){
                 ArrayList<Info> peerInfo = reply.Peer_Info;
                 return peerInfo;
             }else if(reply.statusCode == StatusCode.FILE_NOTFOUND){
@@ -113,26 +120,73 @@ public class Peer {
         return null;
     }
 
+    // ask tracker for all available files
     public ArrayList<String> list(){
         Socket socket = null;
         ObjectOutputStream out = null;
         ObjectInputStream in = null;
         try {
             socket = new Socket(trackerIp, trackerPort);
-            System.out.println("[PEER %d] Connected to Tracker on port "+trackerIp+" port "+trackerPort);
+            System.out.println("PEER Connected to Tracker on port "+trackerIp+" port "+trackerPort);
 
             out = new ObjectOutputStream(socket.getOutputStream());
             in = new ObjectInputStream(socket.getInputStream());
 
-            // send login request to tracker
             PeerToTracker peerToTracker = new PeerToTracker();
             peerToTracker.method = Method.LIST;
 
             out.writeObject(peerToTracker);
 
             AnyToPeer reply = (AnyToPeer) in.readObject();
-            System.out.println(reply.toString());
+            System.out.println("REPLY: "+reply.toString());
             return reply.All_files;
+
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        try{
+            if (in != null) in.close();
+            if (out != null) out.close();
+            if (socket != null) socket.close();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return null;
+    }
+
+    public StatusCode login(){
+        Socket socket = null;
+        ObjectOutputStream out = null;
+        ObjectInputStream in = null;
+        try {
+            socket = new Socket(trackerIp, trackerPort);
+            System.out.println("PEER Connected to Tracker on port "+trackerIp+" port "+trackerPort);
+
+            out = new ObjectOutputStream(socket.getOutputStream());
+            in = new ObjectInputStream(socket.getInputStream());
+
+            // send login request to tracker
+            PeerToTracker peerToTracker = new PeerToTracker();
+            peerToTracker.method = Method.LOGIN;
+            peerToTracker.username = this.username;
+            peerToTracker.password = this.password;
+            peerToTracker.ip = this.ip;
+            peerToTracker.port = this.port;
+
+            out.writeObject(peerToTracker);
+
+            AnyToPeer reply = (AnyToPeer) in.readObject();
+            System.out.println("REPLY: "+reply.toString());
+
+            if (reply.statusCode == StatusCode.SUCCESSFUL_LOGIN) {
+                setToken_id(reply.token_id);
+                inform(out);
+                return reply.statusCode;
+            } else if (reply.statusCode == StatusCode.UNSUCCESSFUL_LOGIN) {
+                return reply.statusCode;
+            }
 
         } catch (UnknownHostException e) {
             e.printStackTrace();
@@ -155,7 +209,7 @@ public class Peer {
         ObjectInputStream in = null;
         try {
             socket = new Socket(trackerIp, trackerPort);
-            System.out.println("[PEER %d] Connected to Tracker on port "+trackerIp+" port "+trackerPort);
+            System.out.println("PEER Connected to Tracker on port "+trackerIp+" port "+trackerPort);
 
             out = new ObjectOutputStream(socket.getOutputStream());
             in = new ObjectInputStream(socket.getInputStream());
@@ -167,7 +221,7 @@ public class Peer {
             out.writeObject(peerToTracker);
 
             AnyToPeer reply = (AnyToPeer) in.readObject();
-            System.out.println(reply.toString());
+            System.out.println("REPLY: "+reply.toString());
             return reply.statusCode;
 
         } catch (UnknownHostException e) {
@@ -191,7 +245,7 @@ public class Peer {
         ObjectInputStream in = null;
         try {
             socket = new Socket(trackerIp, trackerPort);
-            System.out.println("[PEER %d] Connected to Tracker on port "+trackerIp+" port "+trackerPort);
+            System.out.println("PEER Connected to Tracker on port "+trackerIp+" port "+trackerPort);
 
             out = new ObjectOutputStream(socket.getOutputStream());
             in = new ObjectInputStream(socket.getInputStream());
@@ -204,7 +258,7 @@ public class Peer {
             out.writeObject(peerToTracker);
 
             AnyToPeer reply = (AnyToPeer) in.readObject();
-            System.out.println(reply.toString());
+            System.out.println("REPLY: "+reply.toString());
             return reply.statusCode;
 
         } catch (UnknownHostException e) {
@@ -231,43 +285,10 @@ public class Peer {
         out.writeObject(peerToTracker);
     }
 
-    public static StatusCode checkActive(String peerIp, int peerPort){
-        Socket socket = null;
-        ObjectOutputStream out = null;
-        ObjectInputStream in = null;
-        try {
-            socket = new Socket(peerIp, peerPort);
-            System.out.println("[PEER %d] Any connected to peer on port "+peerIp+" port "+peerPort);
-
-            out = new ObjectOutputStream(socket.getOutputStream());
-            in = new ObjectInputStream(socket.getInputStream());
-
-            // send login request to tracker
-            AnyToPeer anytopeer = new AnyToPeer();
-            anytopeer.method = Method.CHECK_ACTIVE;
-
-            out.writeObject(anytopeer);
-
-            AnyToPeer reply = (AnyToPeer) in.readObject();
-            System.out.println(reply.toString());
-
-            return reply.statusCode;
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-        try{
-            if (in != null) in.close();
-            if (out != null) out.close();
-            if (socket != null) socket.close();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        return null;
+    public void simpleDownload() {
     }
 
-    public boolean isActive(){
-        return token_id != -1;
-    }
+    // thread which handle a request from Peer or Tracker
     public class PeerHandler extends Thread{
         Socket socket;
         public PeerHandler(Socket socket){
@@ -283,8 +304,7 @@ public class Peer {
                 in = new ObjectInputStream(socket.getInputStream());
                 AnyToPeer req = (AnyToPeer) in.readObject();
 
-                System.out.printf("[PUBLISHER %s , %d] GOT REQUEST " + req.toString() , getIp() , getPort());
-
+                System.out.printf("PEER GOT REQUEST " + req.toString() );
 
                 if(req.method == Method.CHECK_ACTIVE){
 
@@ -305,16 +325,16 @@ public class Peer {
         }
     }
 
-    /**
-     * Server starts for Peers
-     */
+    // Server starts for Peers
     public void startServer() {
+        System.out.println("Start server...");
+
         ServerSocket providerSocket = null;
         Socket connection = null;
         try {
             providerSocket = new ServerSocket(this.port, 10);
 
-            System.out.println("Peer listening on port " + getPort());
+            System.out.println("PEER listening on port " + getPort() + " and ip " +getIp());
 
             while (true) {
                 connection = providerSocket.accept();
@@ -342,7 +362,7 @@ public class Peer {
         this.password = password;
         this.sharedDirectoryPath = sharedDirectoryPath;
 
-        this.fileTitles = Util.readfiledownloadlist(fileDownloadListPath);
+        this.fileTitles = Util.readSharedDirectory(fileDownloadListPath);
     }
 
     public static void main(String[] args){
@@ -351,15 +371,11 @@ public class Peer {
             // 0: ip, 1: port
             // 2: username, 3: password
             // 4: shared_directory path 5: fileDownloadList.txt. path
-            System.out.println("Start...");
             Peer p = new Peer(args[0], parseInt(args[1]), args[2], args[3], args[4], args[5]);
 
-            System.out.println("Start Peer's thread for command line requests... ");
             PeerMainThread peerMainThread = new PeerMainThread(p);
             peerMainThread.start();
 
-
-            System.out.println("Start...");
             p.startServer();
 
         }catch (Exception e) {

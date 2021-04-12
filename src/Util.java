@@ -1,13 +1,15 @@
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 public class Util {
 
-    public static ArrayList<String> readfiledownloadlist(String path){
+    public static ArrayList<String> readSharedDirectory(String path){
         ArrayList<String> allfiles = new ArrayList<String>();
         Path pa = Paths.get(path);
         File[] file = pa.toFile().listFiles();
@@ -26,7 +28,21 @@ public class Util {
     }
 
     // TODO Peer ArrayList<String>
-
+    public static ArrayList<String> readFileDownloadList(String path) {
+        ArrayList<String> allfiles = new ArrayList<String>();
+        File myObj = new File(path);
+        Scanner myReader = null;
+        try {
+            myReader = new Scanner(myObj);
+            while (myReader.hasNextLine()) {
+                String fileName = myReader.nextLine();
+                allfiles.add(fileName);
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        return allfiles;
+    }
     public static byte[] loadFile (String path, String name){
         System.out.printf("Loading file: %s",name);
         // file to bytes[]
