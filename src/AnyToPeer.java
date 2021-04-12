@@ -10,6 +10,7 @@ public class AnyToPeer implements Serializable {
     public int token_id;
     ArrayList<String> All_files;
     ArrayList<Info> Peer_Info;
+    String fileName;
     // Details reply from tracker
 
     @Override
