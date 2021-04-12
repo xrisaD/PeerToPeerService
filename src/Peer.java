@@ -289,7 +289,7 @@ public class Peer {
             Info peer = peers.get(i);
             String ip = peer.ip;
             int port = peer.port;
-            // checkActive(ip, port)
+            //checkActive(ip, port)
             long end = System.currentTimeMillis();
             long elapsedTime = end - start;
 
@@ -299,30 +299,89 @@ public class Peer {
 
 
         // download file from the best peer
-        StatusCode statusCode = null;
+        byte[] file = null;
         double max = 0;
-        while(statusCode!=StatusCode.FILE_FOUND){
+        while(true){
             max = Collections.max(scores.keySet()); // best peer
-            statusCode = download(fileName, scores.get(max).ip, scores.get(max).port);
-            if(statusCode==StatusCode.FILE_NOTFOUND){
-
+            file = download(fileName, scores.get(max).ip, scores.get(max).port);
+            if(file==null){
+                //notify
+                unsuccessfulNotify();
+            }else{
+                // save file to shared_dir
+                Util.saveFile(sharedDirectoryPath, fileName, file);
+                //notify Tracker
+                successfulNotify();
+                break;
             }
             scores.remove(max);
         }
-        // save file to shared_dir
-
 
     }
-    public void notifySuccessful(){
 
+    public void successfulNotify(){
+        Socket socket = null;
+        ObjectOutputStream out = null;
+        ObjectInputStream in = null;
+        try {
+            socket = new Socket(trackerIp, trackerPort);
+            System.out.println("PEER Connected to Tracker on port "+trackerIp+" port "+trackerPort);
+
+            out = new ObjectOutputStream(socket.getOutputStream());
+            in = new ObjectInputStream(socket.getInputStream());
+
+            // send request to Tracker
+            AnyToPeer anyToPeer = new AnyToPeer();
+            anyToPeer.method = Method.NOTIFY_SUCCESSFUL;
+            out.writeObject(anyToPeer);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        try {
+            if (in != null) in.close();
+            if (out != null) out.close();
+            if (socket != null) socket.close();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
-    public StatusCode download(String fileName, String ipIp, int ipPort){
+
+    public void unsuccessfulNotify(){
+        Socket socket = null;
+        ObjectOutputStream out = null;
+        ObjectInputStream in = null;
+        try {
+            socket = new Socket(trackerIp, trackerPort);
+            System.out.println("PEER Connected to Tracker on port "+trackerIp+" port "+trackerPort);
+
+            out = new ObjectOutputStream(socket.getOutputStream());
+            in = new ObjectInputStream(socket.getInputStream());
+
+            // send request to Tracker
+            PeerToTracker peerToTracker = new PeerToTracker();
+            peerToTracker.method = Method.NOTIFY_FAILED;
+            out.writeObject(peerToTracker);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        try {
+            if (in != null) in.close();
+            if (out != null) out.close();
+            if (socket != null) socket.close();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public byte[] download(String fileName, String ipIp, int ipPort){
         Socket socket = null;
         ObjectOutputStream out = null;
         ObjectInputStream in = null;
         try {
             socket = new Socket(ipIp, ipPort);
-            System.out.println("PEER Connected to Tracker on port "+trackerIp+" port "+trackerPort);
+            System.out.println("PEER Connected to PEER on port "+ipIp+" port "+ipPort);
 
             out = new ObjectOutputStream(socket.getOutputStream());
             in = new ObjectInputStream(socket.getInputStream());
@@ -337,7 +396,11 @@ public class Peer {
 
             AnyToPeer reply = (AnyToPeer) in.readObject();
             System.out.println("REPLY: "+reply.toString());
-            return reply.statusCode;
+            if(reply.statusCode==StatusCode.UNSUCCESSFUL_LOGIN){
+                return null;
+            }else if(reply.statusCode==StatusCode.SUCCESSFUL_LOGIN){
+                return reply.buffer;
+            }
 
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
