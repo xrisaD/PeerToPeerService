@@ -79,6 +79,40 @@ public class Peer {
 
     // request methods
 
+    public static StatusCode checkActive(String peerIp, int peerPort){
+        Socket socket = null;
+        ObjectOutputStream out = null;
+        ObjectInputStream in = null;
+        try {
+            socket = new Socket(peerIp, peerPort);
+            System.out.println("[PEER %d] Any connected to peer on port "+peerIp+" port "+peerPort);
+
+            out = new ObjectOutputStream(socket.getOutputStream());
+            in = new ObjectInputStream(socket.getInputStream());
+
+            // send login request to tracker
+            AnyToPeer anytopeer = new AnyToPeer();
+            anytopeer.method = Method.CHECK_ACTIVE;
+
+            out.writeObject(anytopeer);
+
+            AnyToPeer reply = (AnyToPeer) in.readObject();
+            System.out.println(reply.toString());
+
+            return reply.statusCode;
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        try{
+            if (in != null) in.close();
+            if (out != null) out.close();
+            if (socket != null) socket.close();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return null;
+    }
+
     // get details for peers that have a specific file
     public  ArrayList<Info> details(String fileName){
         Socket socket = null;
@@ -289,7 +323,7 @@ public class Peer {
             Info peer = peers.get(i);
             String ip = peer.ip;
             int port = peer.port;
-            //checkActive(ip, port)
+            checkActive(ip, port);
             long end = System.currentTimeMillis();
             long elapsedTime = end - start;
 
@@ -441,6 +475,16 @@ public class Peer {
 
                 }else if(req.method == Method.SIMPLE_DOWNLOAD){
                     // elegxos an exei to arxeio
+                    if(fileTitles.contains(req.fileName)){
+                        AnyToPeer anyToPeer = new AnyToPeer();
+                        anyToPeer.statusCode = StatusCode.FILE_FOUND;
+                        anyToPeer.buffer = Util.loadFile(sharedDirectoryPath, req.fileName);
+                        out.writeObject(anyToPeer);
+                    }else{
+                        AnyToPeer anyToPeer = new AnyToPeer();
+                        anyToPeer.statusCode = StatusCode.FILE_NOTFOUND;
+                        out.writeObject(anyToPeer);
+                    }
                 }
             } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
