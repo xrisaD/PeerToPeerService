@@ -23,6 +23,8 @@ public class Peer {
 
     public String sharedDirectoryPath;
 
+
+    // Setters and getters
     public String getIp() {
         return ip;
     }
@@ -51,6 +53,7 @@ public class Peer {
         this.password = password;
     }
 
+    // check if peer is active
     public StatusCode isActive(){
         if(token_id != -1) {
             return StatusCode.PEER_ISACTIVE;
@@ -60,6 +63,8 @@ public class Peer {
     }
 
     // input methods
+
+    // print message asking for new username and read one
     public void askForNewUserName(){
         System.out.println("Please, choose a different username..");
         Scanner scanner = new Scanner(System.in);
@@ -67,6 +72,7 @@ public class Peer {
         setUsername(username);
     }
 
+    // print message asking for new username and password and read them
     public void askForNewUserNameAndPassword(){
         System.out.println("Please, choose a different username and password..");
         Scanner scanner = new Scanner(System.in);
@@ -79,6 +85,7 @@ public class Peer {
 
     // request methods
 
+    // check if a peer is active and return the answer
     public static StatusCode checkActive(String peerIp, int peerPort){
         Socket socket = null;
         ObjectOutputStream out = null;
@@ -192,6 +199,7 @@ public class Peer {
         return null;
     }
 
+    // login to P2P system
     public StatusCode login(){
         Socket socket = null;
         ObjectOutputStream out = null;
@@ -237,6 +245,7 @@ public class Peer {
         return null;
     }
 
+    // logout from P2P system
     public StatusCode logout(){
         Socket socket = null;
         ObjectOutputStream out = null;
@@ -271,6 +280,7 @@ public class Peer {
         return null;
     }
 
+    // register to P2P system
     public StatusCode register(){
         Socket socket = null;
         ObjectOutputStream out = null;
@@ -304,53 +314,6 @@ public class Peer {
             throw new RuntimeException(e);
         }
         return null;
-    }
-
-    public void inform(ObjectOutputStream out) throws IOException {
-        PeerToTracker peerToTracker = new PeerToTracker();
-        peerToTracker.shared_directory = this.fileTitles;
-        peerToTracker.ip = this.ip;
-        peerToTracker.port = this.port;
-        peerToTracker.username = this.username;
-        out.writeObject(peerToTracker);
-    }
-
-    public void simpleDownload(String fileName, ArrayList<Info> peers) {
-        HashMap<Double, Info> scores = new HashMap<Double, Info>();
-
-        for (int i=0; i < peers.size(); i++){
-            long start = System. currentTimeMillis();
-            Info peer = peers.get(i);
-            String ip = peer.ip;
-            int port = peer.port;
-            checkActive(ip, port);
-            long end = System.currentTimeMillis();
-            long elapsedTime = end - start;
-
-            double score = elapsedTime*((9/10)^(peer.count_downloads))*((12/10)^(peer.count_failures));
-            scores.put(score, peer);
-        }
-
-
-        // download file from the best peer
-        byte[] file = null;
-        double max = 0;
-        while(true){
-            max = Collections.max(scores.keySet()); // best peer
-            file = download(fileName, scores.get(max).ip, scores.get(max).port);
-            if(file==null){
-                //notify
-                unsuccessfulNotify();
-            }else{
-                // save file to shared_dir
-                Util.saveFile(sharedDirectoryPath, fileName, file);
-                //notify Tracker
-                successfulNotify();
-                break;
-            }
-            scores.remove(max);
-        }
-
     }
 
     public void successfulNotify(){
@@ -449,6 +412,55 @@ public class Peer {
         return null;
     }
 
+    // infrom
+    public void inform(ObjectOutputStream out) throws IOException {
+        PeerToTracker peerToTracker = new PeerToTracker();
+        peerToTracker.shared_directory = this.fileTitles;
+        peerToTracker.ip = this.ip;
+        peerToTracker.port = this.port;
+        peerToTracker.username = this.username;
+        out.writeObject(peerToTracker);
+    }
+
+    // computing a score for each peer
+    public HashMap<Double, Info> computeScores(ArrayList<Info> peers){
+        HashMap<Double, Info> scores = new HashMap<Double, Info>();
+        for (int i=0; i < peers.size(); i++){
+            long start = System. currentTimeMillis();
+            Info peer = peers.get(i);
+            String ip = peer.ip;
+            int port = peer.port;
+            checkActive(ip, port);
+            long end = System.currentTimeMillis();
+            long elapsedTime = end - start;
+
+            double score = elapsedTime*((9/10)^(peer.count_downloads))*((12/10)^(peer.count_failures));
+            scores.put(score, peer);
+        }
+        return scores;
+    }
+
+    // try to download the file selecting each time the best peer
+    public boolean simpleDownload(String fileName,  HashMap<Double, Info> scores) {
+        byte[] file = null;
+        double max = 0;
+        while(scores.size()>0){
+            max = Collections.max(scores.keySet()); // best peer
+            file = download(fileName, scores.get(max).ip, scores.get(max).port);
+            if(file==null){
+                //notify
+                unsuccessfulNotify();
+            }else{
+                // save file to shared_dir
+                Util.saveFile(sharedDirectoryPath, fileName, file);
+                //notify Tracker
+                successfulNotify();
+                return true;
+            }
+            scores.remove(max);
+        }
+        return false;
+    }
     // thread which handle a request from Peer or Tracker
     public class PeerHandler extends Thread{
         Socket socket;
@@ -474,7 +486,6 @@ public class Peer {
                     out.writeObject(peerToTracker);
 
                 }else if(req.method == Method.SIMPLE_DOWNLOAD){
-                    // elegxos an exei to arxeio
                     if(fileTitles.contains(req.fileName)){
                         AnyToPeer anyToPeer = new AnyToPeer();
                         anyToPeer.statusCode = StatusCode.FILE_FOUND;

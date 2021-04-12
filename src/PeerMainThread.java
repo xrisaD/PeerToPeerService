@@ -68,7 +68,9 @@ public class PeerMainThread extends Thread {
                     ArrayList<String> allFiles = p.list();
                     String fileName = printAllFilesListAndAskForASpecificFile(allFiles);
                     ArrayList<Info> peers = p.details(fileName);
-                    p.simpleDownload(fileName, peers);
+                    HashMap<Double, Info> scores = p.computeScores(peers);
+                    boolean successfulDownload = p.simpleDownload(fileName, scores);
+                    System.out.println("Download completed successfully: " + successfulDownload);
                 }
                 else if(!loggedin){ //func=2,3
                     System.out.println("You are not logged in");
