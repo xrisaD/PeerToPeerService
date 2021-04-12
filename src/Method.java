@@ -7,6 +7,6 @@ public enum Method {
     DETAILS,
     CHECK_ACTIVE,
     SIMPLE_DOWNLOAD,
-    NOTIFY
-
+    NOTIFY_SUCCESSFUL,
+    NOTIFY_FAILED
 }
