@@ -23,6 +23,8 @@ public class Peer {
 
     public String sharedDirectoryPath;
 
+
+    // Setters and getters
     public String getIp() {
         return ip;
     }
@@ -51,6 +53,7 @@ public class Peer {
         this.password = password;
     }
 
+    // check if peer is active
     public StatusCode isActive(){
         if(token_id != -1) {
             return StatusCode.PEER_ISACTIVE;
@@ -60,6 +63,8 @@ public class Peer {
     }
 
     // input methods
+
+    // print message asking for new username and read one
     public void askForNewUserName(){
         System.out.println("Please, choose a different username..");
         Scanner scanner = new Scanner(System.in);
@@ -67,6 +72,7 @@ public class Peer {
         setUsername(username);
     }
 
+    // print message asking for new username and password and read them
     public void askForNewUserNameAndPassword(){
         System.out.println("Please, choose a different username and password..");
         Scanner scanner = new Scanner(System.in);
@@ -78,6 +84,41 @@ public class Peer {
     }
 
     // request methods
+
+    // check if a peer is active and return the answer
+    public static StatusCode checkActive(String peerIp, int peerPort){
+        Socket socket = null;
+        ObjectOutputStream out = null;
+        ObjectInputStream in = null;
+        try {
+            socket = new Socket(peerIp, peerPort);
+            System.out.println("[PEER %d] Any connected to peer on port "+peerIp+" port "+peerPort);
+
+            out = new ObjectOutputStream(socket.getOutputStream());
+            in = new ObjectInputStream(socket.getInputStream());
+
+            // send login request to tracker
+            AnyToPeer anytopeer = new AnyToPeer();
+            anytopeer.method = Method.CHECK_ACTIVE;
+
+            out.writeObject(anytopeer);
+
+            AnyToPeer reply = (AnyToPeer) in.readObject();
+            System.out.println(reply.toString());
+
+            return reply.statusCode;
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        try{
+            if (in != null) in.close();
+            if (out != null) out.close();
+            if (socket != null) socket.close();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return null;
+    }
 
     // get details for peers that have a specific file
     public  ArrayList<Info> details(String fileName){
@@ -158,6 +199,7 @@ public class Peer {
         return null;
     }
 
+    // login to P2P system
     public StatusCode login(){
         Socket socket = null;
         ObjectOutputStream out = null;
@@ -203,6 +245,7 @@ public class Peer {
         return null;
     }
 
+    // logout from P2P system
     public StatusCode logout(){
         Socket socket = null;
         ObjectOutputStream out = null;
@@ -237,6 +280,7 @@ public class Peer {
         return null;
     }
 
+    // register to P2P system
     public StatusCode register(){
         Socket socket = null;
         ObjectOutputStream out = null;
@@ -272,57 +316,69 @@ public class Peer {
         return null;
     }
 
-    public void inform(ObjectOutputStream out) throws IOException {
-        PeerToTracker peerToTracker = new PeerToTracker();
-        peerToTracker.shared_directory = this.fileTitles;
-        peerToTracker.ip = this.ip;
-        peerToTracker.port = this.port;
-        peerToTracker.username = this.username;
-        out.writeObject(peerToTracker);
-    }
+    public void successfulNotify(){
+        Socket socket = null;
+        ObjectOutputStream out = null;
+        ObjectInputStream in = null;
+        try {
+            socket = new Socket(trackerIp, trackerPort);
+            System.out.println("PEER Connected to Tracker on port "+trackerIp+" port "+trackerPort);
 
-    public void simpleDownload(String fileName, ArrayList<Info> peers) {
-        HashMap<Double, Info> scores = new HashMap<Double, Info>();
+            out = new ObjectOutputStream(socket.getOutputStream());
+            in = new ObjectInputStream(socket.getInputStream());
 
-        for (int i=0; i < peers.size(); i++){
-            long start = System. currentTimeMillis();
-            Info peer = peers.get(i);
-            String ip = peer.ip;
-            int port = peer.port;
-            // checkActive(ip, port)
-            long end = System.currentTimeMillis();
-            long elapsedTime = end - start;
+            // send request to Tracker
+            AnyToPeer anyToPeer = new AnyToPeer();
+            anyToPeer.method = Method.NOTIFY_SUCCESSFUL;
+            out.writeObject(anyToPeer);
 
-            double score = elapsedTime*((9/10)^(peer.count_downloads))*((12/10)^(peer.count_failures));
-            scores.put(score, peer);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-
-
-        // download file from the best peer
-        StatusCode statusCode = null;
-        double max = 0;
-        while(statusCode!=StatusCode.FILE_FOUND){
-            max = Collections.max(scores.keySet()); // best peer
-            statusCode = download(fileName, scores.get(max).ip, scores.get(max).port);
-            if(statusCode==StatusCode.FILE_NOTFOUND){
-
-            }
-            scores.remove(max);
+        try {
+            if (in != null) in.close();
+            if (out != null) out.close();
+            if (socket != null) socket.close();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
-        // save file to shared_dir
-
-
     }
-    public void notifySuccessful(){
 
+    public void unsuccessfulNotify(){
+        Socket socket = null;
+        ObjectOutputStream out = null;
+        ObjectInputStream in = null;
+        try {
+            socket = new Socket(trackerIp, trackerPort);
+            System.out.println("PEER Connected to Tracker on port "+trackerIp+" port "+trackerPort);
+
+            out = new ObjectOutputStream(socket.getOutputStream());
+            in = new ObjectInputStream(socket.getInputStream());
+
+            // send request to Tracker
+            PeerToTracker peerToTracker = new PeerToTracker();
+            peerToTracker.method = Method.NOTIFY_FAILED;
+            out.writeObject(peerToTracker);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        try {
+            if (in != null) in.close();
+            if (out != null) out.close();
+            if (socket != null) socket.close();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
-    public StatusCode download(String fileName, String ipIp, int ipPort){
+
+    public byte[] download(String fileName, String ipIp, int ipPort){
         Socket socket = null;
         ObjectOutputStream out = null;
         ObjectInputStream in = null;
         try {
             socket = new Socket(ipIp, ipPort);
-            System.out.println("PEER Connected to Tracker on port "+trackerIp+" port "+trackerPort);
+            System.out.println("PEER Connected to PEER on port "+ipIp+" port "+ipPort);
 
             out = new ObjectOutputStream(socket.getOutputStream());
             in = new ObjectInputStream(socket.getInputStream());
@@ -337,7 +393,11 @@ public class Peer {
 
             AnyToPeer reply = (AnyToPeer) in.readObject();
             System.out.println("REPLY: "+reply.toString());
-            return reply.statusCode;
+            if(reply.statusCode==StatusCode.UNSUCCESSFUL_LOGIN){
+                return null;
+            }else if(reply.statusCode==StatusCode.SUCCESSFUL_LOGIN){
+                return reply.buffer;
+            }
 
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
@@ -352,6 +412,55 @@ public class Peer {
         return null;
     }
 
+    // infrom
+    public void inform(ObjectOutputStream out) throws IOException {
+        PeerToTracker peerToTracker = new PeerToTracker();
+        peerToTracker.shared_directory = this.fileTitles;
+        peerToTracker.ip = this.ip;
+        peerToTracker.port = this.port;
+        peerToTracker.username = this.username;
+        out.writeObject(peerToTracker);
+    }
+
+    // computing a score for each peer
+    public HashMap<Double, Info> computeScores(ArrayList<Info> peers){
+        HashMap<Double, Info> scores = new HashMap<Double, Info>();
+        for (int i=0; i < peers.size(); i++){
+            long start = System. currentTimeMillis();
+            Info peer = peers.get(i);
+            String ip = peer.ip;
+            int port = peer.port;
+            checkActive(ip, port);
+            long end = System.currentTimeMillis();
+            long elapsedTime = end - start;
+
+            double score = elapsedTime*((9/10)^(peer.count_downloads))*((12/10)^(peer.count_failures));
+            scores.put(score, peer);
+        }
+        return scores;
+    }
+
+    // try to download the file selecting each time the best peer
+    public boolean simpleDownload(String fileName,  HashMap<Double, Info> scores) {
+        byte[] file = null;
+        double max = 0;
+        while(scores.size()>0){
+            max = Collections.max(scores.keySet()); // best peer
+            file = download(fileName, scores.get(max).ip, scores.get(max).port);
+            if(file==null){
+                //notify
+                unsuccessfulNotify();
+            }else{
+                // save file to shared_dir
+                Util.saveFile(sharedDirectoryPath, fileName, file);
+                //notify Tracker
+                successfulNotify();
+                return true;
+            }
+            scores.remove(max);
+        }
+        return false;
+    }
     // thread which handle a request from Peer or Tracker
     public class PeerHandler extends Thread{
         Socket socket;
@@ -377,7 +486,16 @@ public class Peer {
                     out.writeObject(peerToTracker);
 
                 }else if(req.method == Method.SIMPLE_DOWNLOAD){
-                    // elegxos an exei to arxeio
+                    if(fileTitles.contains(req.fileName)){
+                        AnyToPeer anyToPeer = new AnyToPeer();
+                        anyToPeer.statusCode = StatusCode.FILE_FOUND;
+                        anyToPeer.buffer = Util.loadFile(sharedDirectoryPath, req.fileName);
+                        out.writeObject(anyToPeer);
+                    }else{
+                        AnyToPeer anyToPeer = new AnyToPeer();
+                        anyToPeer.statusCode = StatusCode.FILE_NOTFOUND;
+                        out.writeObject(anyToPeer);
+                    }
                 }
             } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
