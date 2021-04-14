@@ -127,9 +127,9 @@ public class Tracker {
                         FailureLogout(out);
                     }
 
-                }   else if (req.method == Method.LIST) {
+                } else if (req.method == Method.LIST) {
                     replyList(out);
-                }   else if (req.method == Method.DETAILS) {
+                } else if (req.method == Method.DETAILS) {
                     ConcurrentHashMap<Integer, Info> peersWithFile =  Files_toInfo.get(req.fileName);
                     ArrayList<Info> activeFiles = new ArrayList<>();
                     for(Map.Entry<Integer, Info> i : peersWithFile.entrySet()){
@@ -139,7 +139,6 @@ public class Tracker {
                             ArrayList<String> filesOfRemoved = TokenId_toInfo.get(i.getKey()).Shared_directory;
                             TokenId_toInfo.remove(i.getKey());
                             for(String j: filesOfRemoved){
-                                // It removes from Files_toInfo all the Shared_directory files in the Concurrent hashmap with key "req.token_id" which is the token given from the peer.
                                 Files_toInfo.get(j).remove(i.getKey());
                             }
                             peersWithFile.remove(i);
@@ -152,8 +151,8 @@ public class Tracker {
                     }else{
                         replyDetailsNot(out);
                     }
-                }   else if (req.method == Method.NOTIFY_SUCCESSFUL) {
-
+                } else if (req.method == Method.NOTIFY_SUCCESSFUL) {
+                //TODO notify and more!!!
                 }
 
             } catch (IOException | ClassNotFoundException e) {
