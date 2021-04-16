@@ -11,8 +11,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class Tracker {
     ConcurrentHashMap<String, String> Registered_peers = new ConcurrentHashMap<>();
-    ConcurrentHashMap<Integer, Info> TokenId_toInfo = new ConcurrentHashMap<>();
-    ConcurrentHashMap<String, ConcurrentHashMap<Integer, Info>> Files_toInfo = new ConcurrentHashMap<>();
+    ConcurrentHashMap<String, Info> Username_toInfo = new ConcurrentHashMap<>();
+    ConcurrentHashMap<String, ConcurrentHashMap<String, Info>> Files_toInfo = new ConcurrentHashMap<>();
     ArrayList<Integer> All_tokenIds = new ArrayList<>();
     ArrayList<String> All_files;
     private final String ip;
@@ -105,10 +105,10 @@ public class Tracker {
                         PeerToTracker secondInput = (PeerToTracker) in.readObject();
                         System.out.printf("[Tracker %s , %d] GOT PEER INFO " + req.toString(), getIp(), getPort());
                         Info peerInfo = new Info(secondInput.ip, secondInput.port, secondInput.username, secondInput.shared_directory);
-                        TokenId_toInfo.put(token_id, peerInfo);
+                        Username_toInfo.put(secondInput.username, peerInfo);
                         // Fills Files_toToken array.
                         for(String i: peerInfo.Shared_directory){
-                            Files_toInfo.get(i).put(token_id, peerInfo);
+                            Files_toInfo.get(i).put(secondInput.username, peerInfo);
                         }
                     } else {
                         FailureLogin(out);
@@ -116,11 +116,11 @@ public class Tracker {
                 } else if (req.method == Method.LOGOUT) {
                     if(All_tokenIds.contains(req.token_id)) {
                         All_tokenIds.remove(req.token_id);
-                        ArrayList<String> filesOfRemoved = TokenId_toInfo.get(req.token_id).Shared_directory;
-                        TokenId_toInfo.remove(req.token_id);
+                        ArrayList<String> filesOfRemoved = Username_toInfo.get(req.username).Shared_directory;
+                        Username_toInfo.remove(req.username);
                         for(String i: filesOfRemoved){
                             // It removes from Files_toInfo all the Shared_directory files in the Concurrent hashmap with key "req.token_id" which is the token given from the peer.
-                            Files_toInfo.get(i).remove(req.token_id);
+                            Files_toInfo.get(i).remove(req.username);
                         }
                         SuccessLogout(out);
                     }else{
@@ -130,18 +130,19 @@ public class Tracker {
                 } else if (req.method == Method.LIST) {
                     replyList(out);
                 } else if (req.method == Method.DETAILS) {
-                    ConcurrentHashMap<Integer, Info> peersWithFile =  Files_toInfo.get(req.fileName);
+                    ConcurrentHashMap<String, Info> peersWithFile =  Files_toInfo.get(req.fileName);
                     ArrayList<Info> activeFiles = new ArrayList<>();
-                    for(Map.Entry<Integer, Info> i : peersWithFile.entrySet()){
+                    for(Map.Entry<String, Info> i : peersWithFile.entrySet()){
                         StatusCode status = checkActive(i.getValue().ip, i.getValue().port);
+                        assert status != null;
                         if(!status.equals(StatusCode.PEER_ISACTIVE)){
-                            All_tokenIds.remove(i.getKey());
-                            ArrayList<String> filesOfRemoved = TokenId_toInfo.get(i.getKey()).Shared_directory;
-                            TokenId_toInfo.remove(i.getKey());
+                            All_tokenIds.remove(i.getValue().tokenId);
+                            ArrayList<String> filesOfRemoved = Username_toInfo.get(i.getKey()).Shared_directory;
+                            Username_toInfo.remove(i.getKey());
                             for(String j: filesOfRemoved){
                                 Files_toInfo.get(j).remove(i.getKey());
                             }
-                            peersWithFile.remove(i);
+                            peersWithFile.remove(i.getKey());
                         }else{
                             activeFiles.add(i.getValue());
                         }
@@ -174,12 +175,11 @@ public class Tracker {
         ObjectInputStream in = null;
         try {
             socket = new Socket(peerIp, peerPort);
-            System.out.println("[PEER %d] Any connected to peer on port "+peerIp+" port "+peerPort);
+            System.out.println("[PEER %d] Connected to peer on port "+peerIp+" port "+peerPort);
 
             out = new ObjectOutputStream(socket.getOutputStream());
             in = new ObjectInputStream(socket.getInputStream());
 
-            // send login request to tracker
             AnyToPeer anytopeer = new AnyToPeer();
             anytopeer.method = Method.CHECK_ACTIVE;
 
@@ -204,7 +204,7 @@ public class Tracker {
 
     public void FillFiles_toToken(){
         for(String i : All_files){
-            Files_toInfo.put(i, new ConcurrentHashMap<Integer, Info>());
+            Files_toInfo.put(i, new ConcurrentHashMap<String, Info>());
         }
     }
 
