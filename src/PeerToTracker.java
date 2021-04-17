@@ -23,7 +23,7 @@ class PeerToTracker implements Serializable{
     public String fileName;
 
     // notify
-    public String peerUserName;
+    public String peerUsername;
 
     @Override
     public String toString() {
@@ -37,7 +37,7 @@ class PeerToTracker implements Serializable{
                 ", port=" + port +
                 ", shared_directory=" + shared_directory +
                 ", fileName='" + fileName + '\'' +
-                ", peerTokenId='" + peerUserName + '\'' +
+                ", peerTokenId='" + peerUsername + '\'' +
                 '}';
     }
 }
