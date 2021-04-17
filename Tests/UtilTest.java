@@ -80,4 +80,20 @@ public class UtilTest {
         assertEquals(tracker.size(), allfiles.size());
         assertEquals(7, counter);
     }
+
+//    @org.junit.Test
+//    public void testtt() {
+//        Info info = new Info("takis");
+//        ArrayList<Info> ar1 = new ArrayList<>();
+//        ar1.add(info);
+//        ArrayList<Info> ar2 = new ArrayList<>();
+//        ar2.add(info);
+//        ar2.get(0).ip = "5";
+//        System.out.println("AR1 ip");
+//        System.out.println(ar1.get(0).ip);
+//        System.out.println("AR1 ip");
+//        System.out.println(ar2.get(0).ip);
+//    }
+
+
 }

@@ -95,20 +95,25 @@ public class Tracker {
                         FailureRegister(out);
                     } else {
                         Registered_peers.put(req.username, req.password);
+                        Info peerInfo = new Info(req.username);
+                        Username_toInfo.put(req.username, peerInfo);
                         SuccessRegister(out);
                     }
                 } else if (req.method == Method.LOGIN) {
                     if (Registered_peers.containsKey(req.username) && Registered_peers.get(req.username).equals(req.password)) {
                         int token_id = getRandomTokenId();
                         SuccessLogin(out, token_id);
-//                        in = new ObjectInputStream(socket.getInputStream());  //TODO CHECK IF IT IS WORKING
                         PeerToTracker secondInput = (PeerToTracker) in.readObject();
                         System.out.printf("[Tracker %s , %d] GOT PEER INFO " + req.toString(), getIp(), getPort());
-                        Info peerInfo = new Info(secondInput.ip, secondInput.port, secondInput.username, secondInput.shared_directory);
-                        Username_toInfo.put(secondInput.username, peerInfo);
+
+                        Info infoTemp = Username_toInfo.get(req.username);
+                        infoTemp.ip = secondInput.ip;
+                        infoTemp.port = secondInput.port;
+                        infoTemp.Shared_directory = secondInput.shared_directory;
+
                         // Fills Files_toToken array.
-                        for(String i: peerInfo.Shared_directory){
-                            Files_toInfo.get(i).put(secondInput.username, peerInfo);
+                        for(String i: infoTemp.Shared_directory){
+                            Files_toInfo.get(i).put(secondInput.username, infoTemp);
                         }
                     } else {
                         FailureLogin(out);
@@ -117,7 +122,7 @@ public class Tracker {
                     if(All_tokenIds.contains(req.token_id)) {
                         All_tokenIds.remove(req.token_id);
                         ArrayList<String> filesOfRemoved = Username_toInfo.get(req.username).Shared_directory;
-                        Username_toInfo.remove(req.username);
+
                         for(String i: filesOfRemoved){
                             // It removes from Files_toInfo all the Shared_directory files in the Concurrent hashmap with key "req.token_id" which is the token given from the peer.
                             Files_toInfo.get(i).remove(req.username);
@@ -132,19 +137,20 @@ public class Tracker {
                 } else if (req.method == Method.DETAILS) {
                     ConcurrentHashMap<String, Info> peersWithFile =  Files_toInfo.get(req.fileName);
                     ArrayList<Info> activeFiles = new ArrayList<>();
-                    for(Map.Entry<String, Info> i : peersWithFile.entrySet()){
+                    for(Map.Entry<String, Info> i : peersWithFile.entrySet()) {
                         StatusCode status = checkActive(i.getValue().ip, i.getValue().port);
-                        assert status != null;
-                        if(!status.equals(StatusCode.PEER_ISACTIVE)){
-                            All_tokenIds.remove(i.getValue().tokenId);
-                            ArrayList<String> filesOfRemoved = Username_toInfo.get(i.getKey()).Shared_directory;
-                            Username_toInfo.remove(i.getKey());
-                            for(String j: filesOfRemoved){
-                                Files_toInfo.get(j).remove(i.getKey());
+                        if (status != null) {
+                            if (!status.equals(StatusCode.PEER_ISACTIVE)) {
+                                All_tokenIds.remove(i.getValue().tokenId);
+                                ArrayList<String> filesOfRemoved = Username_toInfo.get(i.getKey()).Shared_directory;
+
+                                for (String j : filesOfRemoved) {
+                                    Files_toInfo.get(j).remove(i.getKey());
+                                }
+                                peersWithFile.remove(i.getKey()); //TODO maybe wrong
+                            } else {
+                                activeFiles.add(i.getValue());
                             }
-                            peersWithFile.remove(i.getKey());
-                        }else{
-                            activeFiles.add(i.getValue());
                         }
                     }
                     if(!peersWithFile.isEmpty()) {
@@ -153,9 +159,14 @@ public class Tracker {
                         replyDetailsNot(out);
                     }
                 } else if (req.method == Method.NOTIFY_SUCCESSFUL) {
-                //TODO notify and more!!!
+                    // Update Files_toInfo data structure, essentially we add peer's info to the array of the peers that have the specific file
+                    Info infoTemp = Username_toInfo.get(req.username);
+                    Files_toInfo.get(req.fileName).put(req.username, infoTemp);
+                    // Moreover, increase count downloads index.
+                    Username_toInfo.get(req.peerUsername).count_downloads++;
+                } else if(req.method == Method.NOTIFY_FAILED){
+                    Username_toInfo.get(req.peerUsername).count_failures++;
                 }
-
             } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
             }
@@ -182,7 +193,7 @@ public class Tracker {
 
             AnyToPeer anytopeer = new AnyToPeer();
             anytopeer.method = Method.CHECK_ACTIVE;
-
+            System.out.println(anytopeer.toString());
             out.writeObject(anytopeer);
 
             PeerToTracker reply = (PeerToTracker) in.readObject();
@@ -221,18 +232,21 @@ public class Tracker {
     public void FailureRegister(ObjectOutputStream out) throws IOException {
         AnyToPeer reply = new AnyToPeer();
         reply.statusCode = StatusCode.UNSUCCESSFUL_REGISTER;
+        System.out.println(reply.toString());
         out.writeObject(reply);
     }
 
     public void SuccessRegister(ObjectOutputStream out) throws IOException {
         AnyToPeer reply = new AnyToPeer();
         reply.statusCode = StatusCode.SUCCESSFUL_REGISTER;
+        System.out.println(reply.toString());
         out.writeObject(reply);
     }
 
     public void FailureLogin(ObjectOutputStream out) throws IOException {
         AnyToPeer reply = new AnyToPeer();
         reply.statusCode = StatusCode.UNSUCCESSFUL_LOGIN;
+        System.out.println(reply.toString());
         out.writeObject(reply);
     }
 
@@ -241,36 +255,42 @@ public class Tracker {
         All_tokenIds.add(token);
         reply.token_id = token;
         reply.statusCode = StatusCode.SUCCESSFUL_LOGIN;
+        System.out.println(reply.toString());
         out.writeObject(reply);
     }
 
     public void SuccessLogout(ObjectOutputStream out) throws IOException {
         AnyToPeer reply = new AnyToPeer();
         reply.statusCode = StatusCode.SUCCESSFUL_LOGOUT;
+        System.out.println(reply.toString());
         out.writeObject(reply);
     }
 
     public void FailureLogout(ObjectOutputStream out) throws IOException {
         AnyToPeer reply = new AnyToPeer();
         reply.statusCode = StatusCode.UNSUCCESSFUL_LOGOUT;
+        System.out.println(reply.toString());
         out.writeObject(reply);
     }
 
     public void replyList(ObjectOutputStream out) throws IOException {
         AnyToPeer reply = new AnyToPeer();
         reply.All_files = All_files;
+        System.out.println(reply.toString());
         out.writeObject(reply);
     }
 
     public void replyDetails(ObjectOutputStream out, ArrayList<Info> withFile) throws IOException {
         AnyToPeer reply = new AnyToPeer();
         reply.Peer_Info = withFile;
+        System.out.println(reply.toString());
         out.writeObject(reply);
     }
 
     public void replyDetailsNot(ObjectOutputStream out) throws IOException {
         AnyToPeer reply = new AnyToPeer();
         reply.statusCode = StatusCode.FILE_NOTFOUND;
+        System.out.println(reply.toString());
         out.writeObject(reply);
     }
 
