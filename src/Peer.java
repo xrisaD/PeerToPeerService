@@ -331,7 +331,7 @@ public class Peer {
             PeerToTracker peerToTracker = new PeerToTracker();
             peerToTracker.method = Method.NOTIFY_SUCCESSFUL;
             peerToTracker.fileName = fileName;
-            peerToTracker.peerUserName = username;
+            peerToTracker.peerUsername = username;
             peerToTracker.username = username;
             System.out.println(peerToTracker.toString());
             out.writeObject(peerToTracker);
@@ -362,7 +362,7 @@ public class Peer {
             // send request to Tracker
             PeerToTracker peerToTracker = new PeerToTracker();
             peerToTracker.method = Method.NOTIFY_FAILED;
-            peerToTracker.peerUserName = username;
+            peerToTracker.peerUsername = username;
             System.out.println(peerToTracker.toString());
             out.writeObject(peerToTracker);
 
@@ -423,6 +423,9 @@ public class Peer {
     // infrom
     public void inform(ObjectOutputStream out) throws IOException {
         PeerToTracker peerToTracker = new PeerToTracker();
+        for (String i: this.fileTitles){
+            System.out.println(fileTitles);
+        }
         peerToTracker.shared_directory = this.fileTitles;
         peerToTracker.ip = this.ip;
         peerToTracker.port = this.port;
@@ -551,14 +554,14 @@ public class Peer {
     }
 
     //constructor
-    public Peer(String ip, int port, String username, String password, String sharedDirectoryPath, String fileDownloadListPath) {
+    public Peer(String ip, int port, String username, String password, String sharedDirectoryPath) {
         this.ip = ip;
         this.port = port;
         this.username = username;
         this.password = password;
         this.sharedDirectoryPath = sharedDirectoryPath;
 
-        this.fileTitles = Util.readSharedDirectory(fileDownloadListPath);
+        this.fileTitles = Util.readSharedDirectory(sharedDirectoryPath);
         for (String file: this.fileTitles) {
             System.out.println(file);
         }
@@ -570,7 +573,7 @@ public class Peer {
             // 0: ip, 1: port
             // 2: username, 3: password
             // 4: shared_directory path 5: fileDownloadList.txt. path
-            Peer p = new Peer(args[0], parseInt(args[1]), args[2], args[3], args[4], args[5]);
+            Peer p = new Peer(args[0], parseInt(args[1]), args[2], args[3], args[4]);
 
             PeerMainThread peerMainThread = new PeerMainThread(p);
             peerMainThread.start();

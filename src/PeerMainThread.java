@@ -45,6 +45,7 @@ public class PeerMainThread extends Thread {
                 else if (func == 1 && !loggedin) {
                     StatusCode statusCode = p.login();
                     if (statusCode == StatusCode.SUCCESSFUL_LOGIN) {
+                        System.out.println("SUCCESSFUL_LOGIN");
                         loggedin = true;
                     } else {
                         p.askForNewUserNameAndPassword();
@@ -53,7 +54,8 @@ public class PeerMainThread extends Thread {
                     System.out.println("You are already logged in");
                 }
                 //LOGOUT
-                else if(func == 2 && loggedin) {
+                else if(func == 2) {
+                    System.out.println("OKKKK");
                     StatusCode statusCode = p.logout();
                     if (statusCode == StatusCode.SUCCESSFUL_LOGOUT) {
                         System.out.println("You logged out successfully");

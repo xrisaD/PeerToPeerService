@@ -34,6 +34,9 @@ public class Tracker {
         All_files = Util.readFileDownloadList(fileDownloadListPath);
 
         FillFiles_toToken();
+        for (String i: Files_toInfo.keySet()){
+            System.out.println(i);
+        }
     }
 
     public void startServer() {
@@ -113,6 +116,7 @@ public class Tracker {
 
                         // Fills Files_toToken array.
                         for(String i: infoTemp.Shared_directory){
+                            System.out.println(i);
                             Files_toInfo.get(i).put(secondInput.username, infoTemp);
                         }
                     } else {
