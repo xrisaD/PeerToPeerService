@@ -135,7 +135,7 @@ public class Peer {
             PeerToTracker peerToTracker = new PeerToTracker();
             peerToTracker.method = Method.DETAILS;
             peerToTracker.fileName = fileName;
-
+            System.out.println(peerToTracker.toString());
             out.writeObject(peerToTracker);
 
             AnyToPeer reply = (AnyToPeer) in.readObject();
@@ -177,7 +177,7 @@ public class Peer {
 
             PeerToTracker peerToTracker = new PeerToTracker();
             peerToTracker.method = Method.LIST;
-
+            System.out.println(peerToTracker.toString());
             out.writeObject(peerToTracker);
 
             AnyToPeer reply = (AnyToPeer) in.readObject();
@@ -216,9 +216,7 @@ public class Peer {
             peerToTracker.method = Method.LOGIN;
             peerToTracker.username = this.username;
             peerToTracker.password = this.password;
-            peerToTracker.ip = this.ip;
-            peerToTracker.port = this.port;
-
+            System.out.println(peerToTracker.toString());
             out.writeObject(peerToTracker);
 
             AnyToPeer reply = (AnyToPeer) in.readObject();
@@ -261,6 +259,7 @@ public class Peer {
             PeerToTracker peerToTracker = new PeerToTracker();
             peerToTracker.method = Method.LOGOUT;
             peerToTracker.token_id = token_id;
+            System.out.println(peerToTracker.toString());
             out.writeObject(peerToTracker);
 
             AnyToPeer reply = (AnyToPeer) in.readObject();
@@ -297,6 +296,7 @@ public class Peer {
             peerToTracker.method = Method.REGISTER;
             peerToTracker.username = username;
             peerToTracker.password = password;
+            System.out.println(peerToTracker.toString());
             out.writeObject(peerToTracker);
 
             AnyToPeer reply = (AnyToPeer) in.readObject();
@@ -316,7 +316,7 @@ public class Peer {
         return null;
     }
 
-    public void successfulNotify(){
+    public void successfulNotify(String fileName, String username){
         Socket socket = null;
         ObjectOutputStream out = null;
         ObjectInputStream in = null;
@@ -328,9 +328,13 @@ public class Peer {
             in = new ObjectInputStream(socket.getInputStream());
 
             // send request to Tracker
-            AnyToPeer anyToPeer = new AnyToPeer();
-            anyToPeer.method = Method.NOTIFY_SUCCESSFUL;
-            out.writeObject(anyToPeer);
+            PeerToTracker peerToTracker = new PeerToTracker();
+            peerToTracker.method = Method.NOTIFY_SUCCESSFUL;
+            peerToTracker.fileName = fileName;
+            peerToTracker.peerUserName = username;
+            peerToTracker.username = username;
+            System.out.println(peerToTracker.toString());
+            out.writeObject(peerToTracker);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -344,7 +348,7 @@ public class Peer {
         }
     }
 
-    public void unsuccessfulNotify(){
+    public void unsuccessfulNotify(String username){
         Socket socket = null;
         ObjectOutputStream out = null;
         ObjectInputStream in = null;
@@ -358,7 +362,11 @@ public class Peer {
             // send request to Tracker
             PeerToTracker peerToTracker = new PeerToTracker();
             peerToTracker.method = Method.NOTIFY_FAILED;
+            peerToTracker.peerUserName = username;
+            System.out.println(peerToTracker.toString());
             out.writeObject(peerToTracker);
+
+            System.out.println(peerToTracker.toString());
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -419,6 +427,7 @@ public class Peer {
         peerToTracker.ip = this.ip;
         peerToTracker.port = this.port;
         peerToTracker.username = this.username;
+        System.out.println(peerToTracker.toString());
         out.writeObject(peerToTracker);
     }
 
@@ -449,12 +458,12 @@ public class Peer {
             file = download(fileName, scores.get(max).ip, scores.get(max).port);
             if(file==null){
                 //notify
-                unsuccessfulNotify();
+                unsuccessfulNotify(scores.get(max).username);
             }else{
                 // save file to shared_dir
                 Util.saveFile(sharedDirectoryPath, fileName, file);
                 //notify Tracker
-                successfulNotify();
+                successfulNotify(fileName, scores.get(max).username);
                 return true;
             }
             scores.remove(max);
@@ -483,6 +492,7 @@ public class Peer {
                     StatusCode statusCode = isActive();
                     PeerToTracker peerToTracker = new PeerToTracker();
                     peerToTracker.statusCode = statusCode;
+                    System.out.println(peerToTracker.toString());
                     out.writeObject(peerToTracker);
 
                 }else if(req.method == Method.SIMPLE_DOWNLOAD){
@@ -549,6 +559,9 @@ public class Peer {
         this.sharedDirectoryPath = sharedDirectoryPath;
 
         this.fileTitles = Util.readSharedDirectory(fileDownloadListPath);
+        for (String file: this.fileTitles) {
+            System.out.println(file);
+        }
     }
 
     public static void main(String[] args){

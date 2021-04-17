@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Tracker {
     ConcurrentHashMap<String, String> Registered_peers = new ConcurrentHashMap<>();
     ConcurrentHashMap<String, Info> Username_toInfo = new ConcurrentHashMap<>();
-    ConcurrentHashMap<String, ConcurrentHashMap<String, Info>> Files_toInfo = new ConcurrentHashMap<>();
+    ConcurrentHashMap<String, ConcurrentHashMap<String, Info>> Files_toInfo  = new ConcurrentHashMap<>();
     ArrayList<Integer> All_tokenIds = new ArrayList<>();
     ArrayList<String> All_files;
     private final String ip;
