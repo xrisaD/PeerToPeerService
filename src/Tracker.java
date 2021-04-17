@@ -107,7 +107,7 @@ public class Tracker {
                         int token_id = getRandomTokenId();
                         SuccessLogin(out, token_id);
                         PeerToTracker secondInput = (PeerToTracker) in.readObject();
-                        System.out.printf("[Tracker %s , %d] GOT PEER INFO " + req.toString(), getIp(), getPort());
+                        System.out.printf("[Tracker %s , %d] GOT PEER INFO " + secondInput.toString(), getIp(), getPort());
 
                         Info infoTemp = Username_toInfo.get(req.username);
                         infoTemp.ip = secondInput.ip;
