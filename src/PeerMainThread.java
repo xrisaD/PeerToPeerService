@@ -30,7 +30,7 @@ public class PeerMainThread extends Thread {
             String input = scanner.nextLine();
             int func = parseInt(input);
 
-            if(func>=0 && func<=1) {
+            if(func>=0 && func<=3) {
                 // REGISTER
                 if (func == 0 && !registered) {
                     StatusCode statusCode = p.register();
@@ -54,8 +54,7 @@ public class PeerMainThread extends Thread {
                     System.out.println("You are already logged in");
                 }
                 //LOGOUT
-                else if(func == 2) {
-                    System.out.println("OKKKK");
+                else if(func == 2 && loggedin) {
                     StatusCode statusCode = p.logout();
                     if (statusCode == StatusCode.SUCCESSFUL_LOGOUT) {
                         System.out.println("You logged out successfully");
@@ -70,12 +69,19 @@ public class PeerMainThread extends Thread {
                     ArrayList<String> allFiles = p.list();
                     String fileName = printAllFilesListAndAskForASpecificFile(allFiles);
                     ArrayList<Info> peers = p.details(fileName);
-                    HashMap<Double, Info> scores = p.computeScores(peers);
-                    boolean successfulDownload = p.simpleDownload(fileName, scores);
-                    System.out.println("Download completed successfully: " + successfulDownload);
+                    if(peers!=null) {
+                        HashMap<Double, Info> scores = p.computeScores(peers);
+                        boolean successfulDownload = p.simpleDownload(fileName, scores);
+                        System.out.println("Download completed successfully: " + successfulDownload);
+                    }else{
+                        System.out.println("No peer with this file");
+                    }
                 }
                 else if(!loggedin){ //func=2,3
                     System.out.println("You are not logged in");
+                }
+                else{
+                    System.out.println("Unexpected input?");
                 }
             }
         }

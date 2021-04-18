@@ -99,8 +99,7 @@ public class Peer {
 
             // send login request to tracker
             AnyToPeer anytopeer = new AnyToPeer();
-            anytopeer.method = Method.CHECK_ACTIVE;
-
+            anytopeer.method = Method.CHECK_ACTIVE_PEER_TO_PEER;
             out.writeObject(anytopeer);
 
             AnyToPeer reply = (AnyToPeer) in.readObject();
@@ -259,6 +258,7 @@ public class Peer {
             PeerToTracker peerToTracker = new PeerToTracker();
             peerToTracker.method = Method.LOGOUT;
             peerToTracker.token_id = token_id;
+            peerToTracker.username = username;
             System.out.println(peerToTracker.toString());
             out.writeObject(peerToTracker);
 
@@ -423,9 +423,7 @@ public class Peer {
     // infrom
     public void inform(ObjectOutputStream out) throws IOException {
         PeerToTracker peerToTracker = new PeerToTracker();
-        for (String i: this.fileTitles){
-            System.out.println(fileTitles);
-        }
+        peerToTracker.method = Method.INFORM;
         peerToTracker.shared_directory = this.fileTitles;
         peerToTracker.ip = this.ip;
         peerToTracker.port = this.port;
@@ -437,6 +435,7 @@ public class Peer {
     // computing a score for each peer
     public HashMap<Double, Info> computeScores(ArrayList<Info> peers){
         HashMap<Double, Info> scores = new HashMap<Double, Info>();
+
         for (int i=0; i < peers.size(); i++){
             long start = System. currentTimeMillis();
             Info peer = peers.get(i);
@@ -491,13 +490,18 @@ public class Peer {
 
                 System.out.printf("PEER GOT REQUEST " + req.toString() );
 
-                if(req.method == Method.CHECK_ACTIVE){
+                if(req.method == Method.CHECK_ACTIVE_TRACKER_TO_PEER) {
                     StatusCode statusCode = isActive();
                     PeerToTracker peerToTracker = new PeerToTracker();
                     peerToTracker.statusCode = statusCode;
                     System.out.println(peerToTracker.toString());
                     out.writeObject(peerToTracker);
-
+                }else if(req.method == Method.CHECK_ACTIVE_PEER_TO_PEER){
+                    StatusCode statusCode = isActive();
+                    AnyToPeer anyToPeer = new AnyToPeer();
+                    anyToPeer.statusCode = statusCode;
+                    System.out.println(anyToPeer.toString());
+                    out.writeObject(anyToPeer);
                 }else if(req.method == Method.SIMPLE_DOWNLOAD){
                     if(fileTitles.contains(req.fileName)){
                         AnyToPeer anyToPeer = new AnyToPeer();

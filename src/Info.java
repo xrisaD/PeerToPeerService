@@ -1,6 +1,7 @@
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class Info {
+public class Info implements Serializable {
     public String ip;
     public int port;
     public String username;

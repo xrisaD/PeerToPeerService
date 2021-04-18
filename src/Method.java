@@ -5,7 +5,8 @@ public enum Method {
     INFORM,
     LIST, // all file names
     DETAILS,
-    CHECK_ACTIVE,
+    CHECK_ACTIVE_PEER_TO_PEER,
+    CHECK_ACTIVE_TRACKER_TO_PEER,
     SIMPLE_DOWNLOAD,
     NOTIFY_SUCCESSFUL,
     NOTIFY_FAILED

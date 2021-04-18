@@ -6,6 +6,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 
 
@@ -105,6 +106,7 @@ public class Tracker {
                 } else if (req.method == Method.LOGIN) {
                     if (Registered_peers.containsKey(req.username) && Registered_peers.get(req.username).equals(req.password)) {
                         int token_id = getRandomTokenId();
+                        All_tokenIds.add(token_id);
                         SuccessLogin(out, token_id);
                         PeerToTracker secondInput = (PeerToTracker) in.readObject();
                         System.out.printf("[Tracker %s , %d] GOT PEER INFO " + secondInput.toString(), getIp(), getPort());
@@ -124,6 +126,7 @@ public class Tracker {
                     }
                 } else if (req.method == Method.LOGOUT) {
                     if(All_tokenIds.contains(req.token_id)) {
+                        System.out.println("Token ID"+req.token_id);
                         All_tokenIds.remove(req.token_id);
                         ArrayList<String> filesOfRemoved = Username_toInfo.get(req.username).Shared_directory;
 
@@ -158,8 +161,10 @@ public class Tracker {
                         }
                     }
                     if(!peersWithFile.isEmpty()) {
+                        System.out.println("Peers with the file:"+peersWithFile.size());
                         replyDetails(out, activeFiles);
                     }else{
+                        System.out.println("No peer with this file");
                         replyDetailsNot(out);
                     }
                 } else if (req.method == Method.NOTIFY_SUCCESSFUL) {
@@ -170,6 +175,8 @@ public class Tracker {
                     Username_toInfo.get(req.peerUsername).count_downloads++;
                 } else if(req.method == Method.NOTIFY_FAILED){
                     Username_toInfo.get(req.peerUsername).count_failures++;
+                }else{
+                    System.out.println("Got unexpected request");
                 }
             } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
@@ -196,7 +203,7 @@ public class Tracker {
             in = new ObjectInputStream(socket.getInputStream());
 
             AnyToPeer anytopeer = new AnyToPeer();
-            anytopeer.method = Method.CHECK_ACTIVE;
+            anytopeer.method = Method.CHECK_ACTIVE_TRACKER_TO_PEER;
             System.out.println(anytopeer.toString());
             out.writeObject(anytopeer);
 
@@ -286,6 +293,7 @@ public class Tracker {
 
     public void replyDetails(ObjectOutputStream out, ArrayList<Info> withFile) throws IOException {
         AnyToPeer reply = new AnyToPeer();
+        reply.statusCode = StatusCode.FILE_FOUND;
         reply.Peer_Info = withFile;
         System.out.println(reply.toString());
         out.writeObject(reply);
