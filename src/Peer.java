@@ -401,9 +401,9 @@ public class Peer {
 
             AnyToPeer reply = (AnyToPeer) in.readObject();
             System.out.println("REPLY: "+reply.toString());
-            if(reply.statusCode==StatusCode.UNSUCCESSFUL_LOGIN){
+            if(reply.statusCode==StatusCode.FILE_NOTFOUND){
                 return null;
-            }else if(reply.statusCode==StatusCode.SUCCESSFUL_LOGIN){
+            }else if(reply.statusCode==StatusCode.FILE_FOUND){
                 return reply.buffer;
             }
 
