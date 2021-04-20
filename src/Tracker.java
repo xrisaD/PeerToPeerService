@@ -108,9 +108,9 @@ public class Tracker {
                         Info infoTemp = usernameToInfo.get(req.username);
                         infoTemp.ip = secondInput.ip;
                         infoTemp.port = secondInput.port;
-                        infoTemp.Shared_directory = secondInput.shared_directory;
+                        infoTemp.sharedDirectory = secondInput.sharedDirectory;
 
-                        for(String i: infoTemp.Shared_directory){
+                        for(String i: infoTemp.sharedDirectory){
                             System.out.println(i);
                             filesToInfo.get(i).put(secondInput.username, infoTemp);
                         }
@@ -121,7 +121,7 @@ public class Tracker {
                     if(allTokenIds.contains(req.token_id)) {
                         System.out.println("Token ID"+req.token_id);
                         allTokenIds.remove((Integer) req.token_id);
-                        ArrayList<String> filesOfRemoved = usernameToInfo.get(req.username).Shared_directory;
+                        ArrayList<String> filesOfRemoved = usernameToInfo.get(req.username).sharedDirectory;
 
                         for(String i: filesOfRemoved){
                             // It removes from Files_toInfo all the Shared_directory files in the Concurrent hashmap with key "req.token_id" which is the token given from the peer.
@@ -142,7 +142,7 @@ public class Tracker {
                         if (status != null) {
                             if (!status.equals(StatusCode.PEER_ISACTIVE)) {
                                 allTokenIds.remove(i.getValue().tokenId);
-                                ArrayList<String> filesOfRemoved = usernameToInfo.get(i.getKey()).Shared_directory;
+                                ArrayList<String> filesOfRemoved = usernameToInfo.get(i.getKey()).sharedDirectory;
 
                                 for (String j : filesOfRemoved) {
                                     filesToInfo.get(j).remove(i.getKey());
@@ -165,9 +165,9 @@ public class Tracker {
                     Info infoTemp = usernameToInfo.get(req.username);
                     filesToInfo.get(req.fileName).put(req.username, infoTemp);
                     // Moreover, increase count downloads index.
-                    usernameToInfo.get(req.peerUsername).count_downloads++;
+                    usernameToInfo.get(req.peerUsername).countDownloads++;
                 } else if(req.method == Method.NOTIFY_FAILED){
-                    usernameToInfo.get(req.peerUsername).count_failures++;
+                    usernameToInfo.get(req.peerUsername).countFailures++;
                 }else{
                     System.out.println("Got unexpected request");
                 }
@@ -257,7 +257,7 @@ public class Tracker {
     public void successLogin(ObjectOutputStream out, int token) throws IOException {
         AnyToPeer reply = new AnyToPeer();
         allTokenIds.add(token);
-        reply.token_id = token;
+        reply.tokenΙd = token;
         reply.statusCode = StatusCode.SUCCESSFUL_LOGIN;
         System.out.println(reply.toString());
         out.writeObject(reply);
@@ -279,7 +279,7 @@ public class Tracker {
 
     public void replyList(ObjectOutputStream out) throws IOException {
         AnyToPeer reply = new AnyToPeer();
-        reply.All_files = allFiles;
+        reply.allFiles = allFiles;
         System.out.println(reply.toString());
         out.writeObject(reply);
     }
@@ -287,7 +287,7 @@ public class Tracker {
     public void replyDetails(ObjectOutputStream out, ArrayList<Info> withFile) throws IOException {
         AnyToPeer reply = new AnyToPeer();
         reply.statusCode = StatusCode.FILE_FOUND;
-        reply.Peer_Info = withFile;
+        reply.peerInfo = withFile;
         System.out.println(reply.toString());
         out.writeObject(reply);
     }
