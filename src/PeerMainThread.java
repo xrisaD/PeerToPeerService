@@ -90,6 +90,9 @@ public class PeerMainThread extends Thread {
                         HashMap<Double, Info> scores = p.computeScores(peers);
                         boolean successfulDownload = p.simpleDownload(fileName, scores);
                         System.out.println("Download completed successfully: " + successfulDownload);
+                        if(successfulDownload){
+                            p.fileTitles.add(fileName);
+                        }
                     }else{
                         System.out.println("No peer with this file");
                     }
