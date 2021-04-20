@@ -163,6 +163,8 @@ public class Tracker {
                 } else if (req.method == Method.NOTIFY_SUCCESSFUL) {
                     // Update Files_toInfo data structure, essentially we add peer's info to the array of the peers that have the specific file
                     Info infoTemp = usernameToInfo.get(req.username);
+                    // Add new downloaded file
+                    infoTemp.sharedDirectory.add(req.fileName);
                     filesToInfo.get(req.fileName).put(req.username, infoTemp);
                     // Moreover, increase count downloads index.
                     usernameToInfo.get(req.peerUsername).countDownloads++;
