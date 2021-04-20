@@ -98,7 +98,7 @@ public class Peer {
             out = new ObjectOutputStream(socket.getOutputStream());
             in = new ObjectInputStream(socket.getInputStream());
 
-            // send login request to tracker
+            // send active request to peer
             AnyToPeer anytopeer = new AnyToPeer();
             anytopeer.method = Method.CHECK_ACTIVE_PEER_TO_PEER;
             out.writeObject(anytopeer);
@@ -210,12 +210,6 @@ public class Peer {
 
             out = new ObjectOutputStream(socket.getOutputStream());
             in = new ObjectInputStream(socket.getInputStream());
-
-            // read peer's files
-            this.fileTitles = Util.readSharedDirectory(sharedDirectoryPath);
-            for (String file: this.fileTitles) {
-                System.out.println(file);
-            }
 
             // send login request to tracker
             PeerToTracker peerToTracker = new PeerToTracker();
@@ -436,6 +430,12 @@ public class Peer {
 
     // inform tracker about the files the peer has in the shared directory
     public void inform(ObjectOutputStream out) throws IOException {
+        // read peer's files
+        this.fileTitles = Util.readSharedDirectory(sharedDirectoryPath);
+        for (String file: this.fileTitles) {
+            System.out.println(file);
+        }
+
         PeerToTracker peerToTracker = new PeerToTracker();
         peerToTracker.method = Method.INFORM;
         peerToTracker.sharedDirectory = this.fileTitles;
