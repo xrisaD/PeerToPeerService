@@ -1,15 +1,13 @@
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class AnyToPeer implements Serializable {
     public Method method;
     public StatusCode statusCode;
     byte[] buffer = new byte[4096];
-    public int token_id;
-    ArrayList<String> All_files;
-    ArrayList<Info> Peer_Info;
+    public int tokenΙd;
+    ArrayList<String> allFiles;
+    ArrayList<Info> peerInfo;
     String fileName;
     // Details reply from tracker
 
@@ -18,9 +16,9 @@ public class AnyToPeer implements Serializable {
         return "AnyToPeer{" +
                 "method=" + method +
                 ", statusCode=" + statusCode +
-                ", token_id=" + token_id +
-                ", All_files=" + All_files +
-                ", Peer_Info=" + Peer_Info +
+                ", token_id=" + tokenΙd +
+                ", All_files=" + allFiles +
+                ", Peer_Info=" + peerInfo +
                 '}';
     }
 }

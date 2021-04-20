@@ -142,7 +142,7 @@ public class Peer {
             System.out.println("REPLY: "+reply.toString());
 
             if (reply.statusCode == StatusCode.FILE_FOUND){
-                ArrayList<Info> peerInfo = reply.Peer_Info;
+                ArrayList<Info> peerInfo = reply.peerInfo;
                 return peerInfo;
             }else if(reply.statusCode == StatusCode.FILE_NOTFOUND){
                 return null; // null means file not found
@@ -182,7 +182,7 @@ public class Peer {
 
             AnyToPeer reply = (AnyToPeer) in.readObject();
             System.out.println("REPLY: "+reply.toString());
-            return reply.All_files;
+            return reply.allFiles;
 
         } catch (UnknownHostException e) {
             e.printStackTrace();
@@ -223,7 +223,7 @@ public class Peer {
             System.out.println("REPLY: "+reply.toString());
 
             if (reply.statusCode == StatusCode.SUCCESSFUL_LOGIN) {
-                setToken_id(reply.token_id);
+                setToken_id(reply.tokenΙd);
                 inform(out);
                 return reply.statusCode;
             } else if (reply.statusCode == StatusCode.UNSUCCESSFUL_LOGIN) {
@@ -432,7 +432,7 @@ public class Peer {
     public void inform(ObjectOutputStream out) throws IOException {
         PeerToTracker peerToTracker = new PeerToTracker();
         peerToTracker.method = Method.INFORM;
-        peerToTracker.shared_directory = this.fileTitles;
+        peerToTracker.sharedDirectory = this.fileTitles;
         peerToTracker.ip = this.ip;
         peerToTracker.port = this.port;
         peerToTracker.username = this.username;
@@ -453,7 +453,7 @@ public class Peer {
             long end = System.currentTimeMillis();
             long elapsedTime = end - start;
 
-            double score = elapsedTime*((9/10)^(peer.count_downloads))*((12/10)^(peer.count_failures));
+            double score = elapsedTime*((9/10)^(peer.countDownloads))*((12/10)^(peer.countFailures));
             scores.put(score, peer);
         }
         return scores;
