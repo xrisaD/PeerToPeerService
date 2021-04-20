@@ -35,9 +35,6 @@ public class Tracker {
         All_files = Util.readFileDownloadList(fileDownloadListPath);
 
         FillFiles_toToken();
-        for (String i: Files_toInfo.keySet()){
-            System.out.println(i);
-        }
     }
 
     public void startServer() {
@@ -127,7 +124,7 @@ public class Tracker {
                 } else if (req.method == Method.LOGOUT) {
                     if(All_tokenIds.contains(req.token_id)) {
                         System.out.println("Token ID"+req.token_id);
-                        All_tokenIds.remove(req.token_id);
+                        All_tokenIds.remove((Integer) req.token_id);
                         ArrayList<String> filesOfRemoved = Username_toInfo.get(req.username).Shared_directory;
 
                         for(String i: filesOfRemoved){
