@@ -3,10 +3,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 
 
@@ -111,9 +109,9 @@ public class Tracker {
                         Info infoTemp = Username_toInfo.get(req.username);
                         infoTemp.ip = secondInput.ip;
                         infoTemp.port = secondInput.port;
-                        infoTemp.Shared_directory = secondInput.shared_directory;
+                        infoTemp.sharedDirectory = secondInput.sharedDirectory;
 
-                        for(String i: infoTemp.Shared_directory){
+                        for(String i: infoTemp.sharedDirectory){
                             System.out.println(i);
                             Files_toInfo.get(i).put(secondInput.username, infoTemp);
                         }
@@ -124,7 +122,7 @@ public class Tracker {
                     if(All_tokenIds.contains(req.token_id)) {
                         System.out.println("Token ID"+req.token_id);
                         All_tokenIds.remove((Integer) req.token_id);
-                        ArrayList<String> filesOfRemoved = Username_toInfo.get(req.username).Shared_directory;
+                        ArrayList<String> filesOfRemoved = Username_toInfo.get(req.username).sharedDirectory;
 
                         for(String i: filesOfRemoved){
                             // It removes from Files_toInfo all the Shared_directory files in the Concurrent hashmap with key "req.token_id" which is the token given from the peer.
@@ -145,7 +143,7 @@ public class Tracker {
                         if (status != null) {
                             if (!status.equals(StatusCode.PEER_ISACTIVE)) {
                                 All_tokenIds.remove(i.getValue().tokenId);
-                                ArrayList<String> filesOfRemoved = Username_toInfo.get(i.getKey()).Shared_directory;
+                                ArrayList<String> filesOfRemoved = Username_toInfo.get(i.getKey()).sharedDirectory;
 
                                 for (String j : filesOfRemoved) {
                                     Files_toInfo.get(j).remove(i.getKey());
@@ -168,9 +166,9 @@ public class Tracker {
                     Info infoTemp = Username_toInfo.get(req.username);
                     Files_toInfo.get(req.fileName).put(req.username, infoTemp);
                     // Moreover, increase count downloads index.
-                    Username_toInfo.get(req.peerUsername).count_downloads++;
+                    Username_toInfo.get(req.peerUsername).countDownloads++;
                 } else if(req.method == Method.NOTIFY_FAILED){
-                    Username_toInfo.get(req.peerUsername).count_failures++;
+                    Username_toInfo.get(req.peerUsername).countFailures++;
                 }else{
                     System.out.println("Got unexpected request");
                 }
@@ -260,7 +258,7 @@ public class Tracker {
     public void SuccessLogin(ObjectOutputStream out, int token) throws IOException {
         AnyToPeer reply = new AnyToPeer();
         All_tokenIds.add(token);
-        reply.token_id = token;
+        reply.tokenΙd = token;
         reply.statusCode = StatusCode.SUCCESSFUL_LOGIN;
         System.out.println(reply.toString());
         out.writeObject(reply);
@@ -282,7 +280,7 @@ public class Tracker {
 
     public void replyList(ObjectOutputStream out) throws IOException {
         AnyToPeer reply = new AnyToPeer();
-        reply.All_files = All_files;
+        reply.allFiles = All_files;
         System.out.println(reply.toString());
         out.writeObject(reply);
     }
@@ -290,7 +288,7 @@ public class Tracker {
     public void replyDetails(ObjectOutputStream out, ArrayList<Info> withFile) throws IOException {
         AnyToPeer reply = new AnyToPeer();
         reply.statusCode = StatusCode.FILE_FOUND;
-        reply.Peer_Info = withFile;
+        reply.peerInfo = withFile;
         System.out.println(reply.toString());
         out.writeObject(reply);
     }

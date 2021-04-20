@@ -1,6 +1,5 @@
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.List;
 
 class PeerToTracker implements Serializable{
     public Method method;
@@ -17,7 +16,7 @@ class PeerToTracker implements Serializable{
     // login
     public String ip;
     public int port;
-    ArrayList<String> shared_directory; //hash?
+    ArrayList<String> sharedDirectory; //hash?
 
     // details
     public String fileName;
@@ -35,7 +34,7 @@ class PeerToTracker implements Serializable{
                 ", token_id=" + token_id +
                 ", ip='" + ip + '\'' +
                 ", port=" + port +
-                ", shared_directory=" + shared_directory +
+                ", shared_directory=" + sharedDirectory +
                 ", fileName='" + fileName + '\'' +
                 ", peerUsername='" + peerUsername + '\'' +
                 '}';
