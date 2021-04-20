@@ -104,14 +104,13 @@ public class Tracker {
                         successLogin(out, token_id);
                         PeerToTracker secondInput = (PeerToTracker) in.readObject();
                         System.out.printf("[Tracker %s , %d] GOT PEER INFO " + secondInput.toString() + " \n", getIp(), getPort());
-
+                        System.out.println("----");
                         Info infoTemp = usernameToInfo.get(req.username);
                         infoTemp.ip = secondInput.ip;
                         infoTemp.port = secondInput.port;
                         infoTemp.sharedDirectory = secondInput.sharedDirectory;
 
-                        for(String i: infoTemp.sharedDirectory){
-                            System.out.println(i);
+                        for (String i : infoTemp.sharedDirectory) {
                             filesToInfo.get(i).put(secondInput.username, infoTemp);
                         }
                     } else {
@@ -119,7 +118,6 @@ public class Tracker {
                     }
                 } else if (req.method == Method.LOGOUT) {
                     if(allTokenIds.contains(req.token_id)) {
-                        System.out.println("Token ID"+req.token_id);
                         allTokenIds.remove((Integer) req.token_id);
                         ArrayList<String> filesOfRemoved = usernameToInfo.get(req.username).sharedDirectory;
 
@@ -154,7 +152,7 @@ public class Tracker {
                         }
                     }
                     if(!peersWithFile.isEmpty()) {
-                        System.out.println("Peers with the file:"+peersWithFile.size());
+                        System.out.println("Peers with the file: "+peersWithFile.size());
                         replyDetails(out, activeFiles);
                     }else{
                         System.out.println("No peer with this file");
@@ -192,7 +190,7 @@ public class Tracker {
         ObjectInputStream in = null;
         try {
             socket = new Socket(peerIp, peerPort);
-            System.out.println("[PEER %d] Connected to peer on port "+peerIp+" port "+peerPort);
+            System.out.println("Connected to peer on port "+peerIp+" port "+peerPort);
 
             out = new ObjectOutputStream(socket.getOutputStream());
             in = new ObjectInputStream(socket.getInputStream());
@@ -238,21 +236,24 @@ public class Tracker {
     public void failureRegister(ObjectOutputStream out) throws IOException {
         AnyToPeer reply = new AnyToPeer();
         reply.statusCode = StatusCode.UNSUCCESSFUL_REGISTER;
-        System.out.println(reply.toString());
+        System.out.println("REPLY: "+reply.toString());
+        System.out.println("----");
         out.writeObject(reply);
     }
 
     public void successRegister(ObjectOutputStream out) throws IOException {
         AnyToPeer reply = new AnyToPeer();
         reply.statusCode = StatusCode.SUCCESSFUL_REGISTER;
-        System.out.println(reply.toString());
+        System.out.println("REPLY: "+reply.toString());
+        System.out.println("----");
         out.writeObject(reply);
     }
 
     public void failureLogin(ObjectOutputStream out) throws IOException {
         AnyToPeer reply = new AnyToPeer();
         reply.statusCode = StatusCode.UNSUCCESSFUL_LOGIN;
-        System.out.println(reply.toString());
+        System.out.println("REPLY: "+reply.toString());
+        System.out.println("----");
         out.writeObject(reply);
     }
 
@@ -261,28 +262,32 @@ public class Tracker {
         allTokenIds.add(token);
         reply.tokenΙd = token;
         reply.statusCode = StatusCode.SUCCESSFUL_LOGIN;
-        System.out.println(reply.toString());
+        System.out.println("REPLY: "+reply.toString());
+        System.out.println("----");
         out.writeObject(reply);
     }
 
     public void successLogout(ObjectOutputStream out) throws IOException {
         AnyToPeer reply = new AnyToPeer();
         reply.statusCode = StatusCode.SUCCESSFUL_LOGOUT;
-        System.out.println(reply.toString());
+        System.out.println("REPLY: "+reply.toString());
+        System.out.println("----");
         out.writeObject(reply);
     }
 
     public void failureLogout(ObjectOutputStream out) throws IOException {
         AnyToPeer reply = new AnyToPeer();
         reply.statusCode = StatusCode.UNSUCCESSFUL_LOGOUT;
-        System.out.println(reply.toString());
+        System.out.println("REPLY: "+reply.toString());
+        System.out.println("----");
         out.writeObject(reply);
     }
 
     public void replyList(ObjectOutputStream out) throws IOException {
         AnyToPeer reply = new AnyToPeer();
         reply.allFiles = allFiles;
-        System.out.println(reply.toString());
+        System.out.println("REPLY: "+reply.toString());
+        System.out.println("----");
         out.writeObject(reply);
     }
 
@@ -290,14 +295,16 @@ public class Tracker {
         AnyToPeer reply = new AnyToPeer();
         reply.statusCode = StatusCode.FILE_FOUND;
         reply.peerInfo = withFile;
-        System.out.println(reply.toString());
+        System.out.println("REPLY: "+reply.toString());
+        System.out.println("----");
         out.writeObject(reply);
     }
 
     public void replyDetailsNot(ObjectOutputStream out) throws IOException {
         AnyToPeer reply = new AnyToPeer();
         reply.statusCode = StatusCode.FILE_NOTFOUND;
-        System.out.println(reply.toString());
+        System.out.println("REPLY: "+reply.toString());
+        System.out.println("----");
         out.writeObject(reply);
     }
 
