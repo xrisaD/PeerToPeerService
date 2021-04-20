@@ -9,6 +9,7 @@ import java.util.Scanner;
 
 public class Util {
 
+    // read all files' names in a specific directory
     public static ArrayList<String> readSharedDirectory(String path){
         ArrayList<String> allfiles = new ArrayList<String>();
         Path pa = Paths.get(path);
@@ -21,7 +22,7 @@ public class Util {
         return allfiles;
     }
 
-    // TODO Peer ArrayList<String>
+    // read the list with all files
     public static ArrayList<String> readFileDownloadList(String path) {
         ArrayList<String> allfiles = new ArrayList<String>();
         File myObj = new File(path);
@@ -37,6 +38,8 @@ public class Util {
         }
         return allfiles;
     }
+
+    // load a file
     public static byte[] loadFile (String path, String name){
         System.out.printf("Loading file: %s",name);
         // file to bytes[]
@@ -50,6 +53,7 @@ public class Util {
         return bytes;
     }
 
+    // save a given array of bytes in a specific path
     public static void saveFile(String path, String name, byte[] bytes){
         // bytes[] to file
         Path pathFile = Paths.get(path+name);

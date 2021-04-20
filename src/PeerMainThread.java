@@ -11,10 +11,8 @@ public class PeerMainThread extends Thread {
     }
     @Override
     public void run() {
-        System.out.println("Start Peer's thread for command line requests... ");
         boolean registered = false;
         boolean loggedin = false;
-        System.out.println("Start PeerMainThread...");
         while(true){
 
             System.out.println(p.getIp()+p.getPort());
@@ -77,12 +75,11 @@ public class PeerMainThread extends Thread {
                         System.out.println("No peer with this file");
                     }
                 }
-                else if(!loggedin){ //func=2,3
+                else { //func=2,3
                     System.out.println("You are not logged in");
                 }
-                else{
-                    System.out.println("Unexpected input?");
-                }
+            }else{
+                System.out.println("You have to type a number in range [0,3]");
             }
         }
     }
@@ -99,6 +96,7 @@ public class PeerMainThread extends Thread {
 
         String number = scanner.nextLine();
         int fileNumber = Integer.parseInt(number);
+        // get a valid number of file
         while(fileNumber<0 || fileNumber>=allFiles.size()) {
             number = scanner.nextLine();
             fileNumber = Integer.parseInt(number);

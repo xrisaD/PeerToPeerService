@@ -92,7 +92,7 @@ public class Tracker {
                 in = new ObjectInputStream(socket.getInputStream());
 
                 PeerToTracker req = (PeerToTracker) in.readObject();
-                System.out.printf("[Tracker %s , %d] GOT REQUEST " + req.toString(), getIp(), getPort());
+                System.out.printf("[Tracker %s , %d] GOT REQUEST " + req.toString() + "\n", getIp(), getPort());
 
                 if (req.method == Method.REGISTER) {
                     if (Registered_peers.containsKey(req.username)) {
@@ -109,14 +109,13 @@ public class Tracker {
                         All_tokenIds.add(token_id);
                         SuccessLogin(out, token_id);
                         PeerToTracker secondInput = (PeerToTracker) in.readObject();
-                        System.out.printf("[Tracker %s , %d] GOT PEER INFO " + secondInput.toString(), getIp(), getPort());
+                        System.out.printf("[Tracker %s , %d] GOT PEER INFO " + secondInput.toString() + " \n", getIp(), getPort());
 
                         Info infoTemp = Username_toInfo.get(req.username);
                         infoTemp.ip = secondInput.ip;
                         infoTemp.port = secondInput.port;
                         infoTemp.Shared_directory = secondInput.shared_directory;
 
-                        // Fills Files_toToken array.
                         for(String i: infoTemp.Shared_directory){
                             System.out.println(i);
                             Files_toInfo.get(i).put(secondInput.username, infoTemp);

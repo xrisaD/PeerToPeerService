@@ -316,6 +316,7 @@ public class Peer {
         return null;
     }
 
+    // notify trackr that a file downloaded successfully from a specific peer
     public void successfulNotify(String fileName, String username){
         Socket socket = null;
         ObjectOutputStream out = null;
@@ -348,6 +349,7 @@ public class Peer {
         }
     }
 
+    // notify trackr that a file downloaded unsuccessfully from a specific peer
     public void unsuccessfulNotify(String username){
         Socket socket = null;
         ObjectOutputStream out = null;
@@ -380,13 +382,14 @@ public class Peer {
         }
     }
 
-    public byte[] download(String fileName, String ipIp, int ipPort){
+    // download a song from a specific peer
+    public byte[] download(String fileName, String peerIp, int peerPort){
         Socket socket = null;
         ObjectOutputStream out = null;
         ObjectInputStream in = null;
         try {
-            socket = new Socket(ipIp, ipPort);
-            System.out.println("PEER Connected to PEER on port "+ipIp+" port "+ipPort);
+            socket = new Socket(peerIp, peerPort);
+            System.out.println("PEER Connected to PEER on port "+ peerIp +" port "+ peerPort);
 
             out = new ObjectOutputStream(socket.getOutputStream());
             in = new ObjectInputStream(socket.getInputStream());
@@ -420,7 +423,7 @@ public class Peer {
         return null;
     }
 
-    // infrom
+    // inform tracker about the files the peer has in the shared directory
     public void inform(ObjectOutputStream out) throws IOException {
         PeerToTracker peerToTracker = new PeerToTracker();
         peerToTracker.method = Method.INFORM;
@@ -488,7 +491,7 @@ public class Peer {
                 in = new ObjectInputStream(socket.getInputStream());
                 AnyToPeer req = (AnyToPeer) in.readObject();
 
-                System.out.printf("PEER GOT REQUEST " + req.toString() );
+                System.out.println("PEER GOT REQUEST " + req.toString() );
 
                 if(req.method == Method.CHECK_ACTIVE_TRACKER_TO_PEER) {
                     StatusCode statusCode = isActive();
@@ -528,9 +531,8 @@ public class Peer {
         }
     }
 
-    // Server starts for Peers
+    // Server starts for Peer
     public void startServer() {
-        System.out.println("Start server...");
 
         ServerSocket providerSocket = null;
         Socket connection = null;
@@ -576,12 +578,14 @@ public class Peer {
             // Command Line Inputs:
             // 0: ip, 1: port
             // 2: username, 3: password
-            // 4: shared_directory path 5: fileDownloadList.txt. path
+            // 4: shared_directory path
             Peer p = new Peer(args[0], parseInt(args[1]), args[2], args[3], args[4]);
 
             PeerMainThread peerMainThread = new PeerMainThread(p);
+            // start peer's thread for command line requests
             peerMainThread.start();
 
+            // start server that get requests from the tracker or other peers
             p.startServer();
 
         }catch (Exception e) {
