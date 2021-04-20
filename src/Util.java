@@ -41,7 +41,6 @@ public class Util {
 
     // load a file
     public static byte[] loadFile (String path, String name){
-        System.out.printf("Loading file: %s",name);
         // file to bytes[]
         byte[] bytes = new byte[0];
         try {

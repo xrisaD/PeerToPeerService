@@ -37,7 +37,7 @@ class PeerToTracker implements Serializable{
                 ", port=" + port +
                 ", shared_directory=" + shared_directory +
                 ", fileName='" + fileName + '\'' +
-                ", peerTokenId='" + peerUsername + '\'' +
+                ", peerUsername='" + peerUsername + '\'' +
                 '}';
     }
 }
