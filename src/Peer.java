@@ -211,6 +211,12 @@ public class Peer {
             out = new ObjectOutputStream(socket.getOutputStream());
             in = new ObjectInputStream(socket.getInputStream());
 
+            // read peer's files
+            this.fileTitles = Util.readSharedDirectory(sharedDirectoryPath);
+            for (String file: this.fileTitles) {
+                System.out.println(file);
+            }
+
             // send login request to tracker
             PeerToTracker peerToTracker = new PeerToTracker();
             peerToTracker.method = Method.LOGIN;
@@ -571,11 +577,6 @@ public class Peer {
         this.username = username;
         this.password = password;
         this.sharedDirectoryPath = sharedDirectoryPath;
-
-        this.fileTitles = Util.readSharedDirectory(sharedDirectoryPath);
-        for (String file: this.fileTitles) {
-            System.out.println(file);
-        }
     }
 
     public static void main(String[] args){
