@@ -92,6 +92,7 @@ public class Peer {
         ObjectInputStream in = null;
         try {
             socket = new Socket(peerIp, peerPort);
+
             System.out.println("[PEER %d] Any connected to peer on port "+peerIp+" port "+peerPort);
 
             out = new ObjectOutputStream(socket.getOutputStream());
@@ -249,6 +250,7 @@ public class Peer {
         ObjectInputStream in = null;
         try {
             socket = new Socket(trackerIp, trackerPort);
+
             System.out.println("PEER Connected to Tracker on port "+trackerIp+" port "+trackerPort);
 
             out = new ObjectOutputStream(socket.getOutputStream());
@@ -264,6 +266,7 @@ public class Peer {
 
             AnyToPeer reply = (AnyToPeer) in.readObject();
             System.out.println("REPLY: "+reply.toString());
+
             return reply.statusCode;
 
         } catch (IOException | ClassNotFoundException e) {
@@ -286,6 +289,7 @@ public class Peer {
         ObjectInputStream in = null;
         try {
             socket = new Socket(trackerIp, trackerPort);
+
             System.out.println("PEER Connected to Tracker on port "+trackerIp+" port "+trackerPort);
 
             out = new ObjectOutputStream(socket.getOutputStream());
@@ -301,6 +305,7 @@ public class Peer {
 
             AnyToPeer reply = (AnyToPeer) in.readObject();
             System.out.println("REPLY: "+reply.toString());
+
             return reply.statusCode;
 
         } catch (IOException | ClassNotFoundException e) {

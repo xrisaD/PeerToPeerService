@@ -15,7 +15,6 @@ public class PeerMainThread extends Thread {
         boolean loggedin = false;
         while(true){
 
-            System.out.println(p.getIp()+p.getPort());
             //print menu
             System.out.println();
             System.out.println("----------------------------");
@@ -31,29 +30,44 @@ public class PeerMainThread extends Thread {
             if(func>=0 && func<=3) {
                 // REGISTER
                 if (func == 0 && !registered) {
+                    System.out.println();
+                    System.out.println("START REGISTER MESSAGES");
                     StatusCode statusCode = p.register();
+                    System.out.println(statusCode);
                     if (statusCode == StatusCode.SUCCESSFUL_REGISTER) {
                         registered = true;
-                    } else
+                    } else{
                         p.askForNewUserName();
+                    }
+                    System.out.println("END REGISTER MESSAGES");
+                    System.out.println();
                 } else if (func == 0 && registered) {
                     System.out.println("You are already registered");
                 }
                 // LOGIN
                 else if (func == 1 && !loggedin) {
+                    System.out.println();
+                    System.out.println("START LOGIN MESSAGES");
+
                     StatusCode statusCode = p.login();
+                    System.out.println(statusCode);
                     if (statusCode == StatusCode.SUCCESSFUL_LOGIN) {
-                        System.out.println("SUCCESSFUL_LOGIN");
                         loggedin = true;
                     } else {
                         p.askForNewUserNameAndPassword();
                     }
+                    System.out.println("END LOGIN MESSAGES");
+                    System.out.println();
                 } else if (func == 1 && loggedin) {
                     System.out.println("You are already logged in");
                 }
                 //LOGOUT
                 else if(func == 2 && loggedin) {
+                    System.out.println();
+                    System.out.println("START LOGOUT MESSAGES");
+
                     StatusCode statusCode = p.logout();
+                    System.out.println(statusCode);
                     if (statusCode == StatusCode.SUCCESSFUL_LOGOUT) {
                         System.out.println("You logged out successfully");
                         loggedin = false;
@@ -61,9 +75,14 @@ public class PeerMainThread extends Thread {
                     }else {
                         System.out.println("You are still logged in.. Unsuccessful logout!");
                     }
+                    System.out.println("END LOGOUT MESSAGES");
+                    System.out.println();
                 }
                 // LIST
                 else if (func == 3 &&  loggedin) {
+                    System.out.println();
+                    System.out.println("START LIST MESSAGES");
+
                     ArrayList<String> allFiles = p.list();
                     String fileName = printAllFilesListAndAskForASpecificFile(allFiles);
                     ArrayList<Info> peers = p.details(fileName);
@@ -74,6 +93,9 @@ public class PeerMainThread extends Thread {
                     }else{
                         System.out.println("No peer with this file");
                     }
+
+                    System.out.println("END LIST MESSAGES");
+                    System.out.println();
                 }
                 else { //func=2,3
                     System.out.println("You are not logged in");
