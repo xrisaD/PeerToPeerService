@@ -12,7 +12,7 @@ public class PeerMainThread extends Thread {
     @Override
     public void run() {
         boolean registered = false;
-        boolean loggedin = false;
+        boolean loggedIn = false;
         while(true){
 
             //print menu
@@ -45,24 +45,24 @@ public class PeerMainThread extends Thread {
                     System.out.println("You are already registered");
                 }
                 // LOGIN
-                else if (func == 1 && !loggedin) {
+                else if (func == 1 && !loggedIn) {
                     System.out.println();
                     System.out.println("START LOGIN MESSAGES");
 
                     StatusCode statusCode = p.login();
                     System.out.println(statusCode);
                     if (statusCode == StatusCode.SUCCESSFUL_LOGIN) {
-                        loggedin = true;
+                        loggedIn = true;
                     } else {
                         p.askForNewUserNameAndPassword();
                     }
                     System.out.println("END LOGIN MESSAGES");
                     System.out.println();
-                } else if (func == 1 && loggedin) {
+                } else if (func == 1 && loggedIn) {
                     System.out.println("You are already logged in");
                 }
                 //LOGOUT
-                else if(func == 2 && loggedin) {
+                else if(func == 2 && loggedIn) {
                     System.out.println();
                     System.out.println("START LOGOUT MESSAGES");
 
@@ -70,7 +70,7 @@ public class PeerMainThread extends Thread {
                     System.out.println(statusCode);
                     if (statusCode == StatusCode.SUCCESSFUL_LOGOUT) {
                         System.out.println("You logged out successfully");
-                        loggedin = false;
+                        loggedIn = false;
                         p.setToken_id(-1);
                     }else {
                         System.out.println("You are still logged in.. Unsuccessful logout!");
@@ -79,7 +79,7 @@ public class PeerMainThread extends Thread {
                     System.out.println();
                 }
                 // LIST
-                else if (func == 3 &&  loggedin) {
+                else if (func == 3 && loggedIn) {
                     System.out.println();
                     System.out.println("START LIST MESSAGES");
 

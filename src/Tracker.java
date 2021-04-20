@@ -3,19 +3,17 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 
 
 public class Tracker {
-    ConcurrentHashMap<String, String> Registered_peers = new ConcurrentHashMap<>();
-    ConcurrentHashMap<String, Info> Username_toInfo = new ConcurrentHashMap<>();
-    ConcurrentHashMap<String, ConcurrentHashMap<String, Info>> Files_toInfo  = new ConcurrentHashMap<>();
-    ArrayList<Integer> All_tokenIds = new ArrayList<>();
-    ArrayList<String> All_files;
+    ConcurrentHashMap<String, String> registeredPeers = new ConcurrentHashMap<>();
+    ConcurrentHashMap<String, Info> usernameToInfo = new ConcurrentHashMap<>();
+    ConcurrentHashMap<String, ConcurrentHashMap<String, Info>> filesToInfo = new ConcurrentHashMap<>();
+    ArrayList<Integer> allTokenIds = new ArrayList<>();
+    ArrayList<String> allFiles;
     private final String ip;
     private final int port;
 
@@ -28,13 +26,12 @@ public class Tracker {
     }
 
     public Tracker(String ip, int port, String fileDownloadListPath) {
-        // 0: ip, 1: port
-        // 2: fineDownloadListPath
         this.ip = ip;
         this.port = port;
-        All_files = Util.readFileDownloadList(fileDownloadListPath);
+        // Reads all files from specific file in given path.
+        allFiles = Util.readFileDownloadList(fileDownloadListPath);
 
-        FillFiles_toToken();
+        fillFilesToToken();
     }
 
     public void startServer() {
@@ -92,63 +89,63 @@ public class Tracker {
                 System.out.printf("[Tracker %s , %d] GOT REQUEST " + req.toString() + "\n", getIp(), getPort());
 
                 if (req.method == Method.REGISTER) {
-                    if (Registered_peers.containsKey(req.username)) {
-                        FailureRegister(out);
+                    if (registeredPeers.containsKey(req.username)) {
+                        failureRegister(out);
                     } else {
-                        Registered_peers.put(req.username, req.password);
+                        registeredPeers.put(req.username, req.password);
                         Info peerInfo = new Info(req.username);
-                        Username_toInfo.put(req.username, peerInfo);
-                        SuccessRegister(out);
+                        usernameToInfo.put(req.username, peerInfo);
+                        successRegister(out);
                     }
                 } else if (req.method == Method.LOGIN) {
-                    if (Registered_peers.containsKey(req.username) && Registered_peers.get(req.username).equals(req.password)) {
+                    if (registeredPeers.containsKey(req.username) && registeredPeers.get(req.username).equals(req.password)) {
                         int token_id = getRandomTokenId();
-                        All_tokenIds.add(token_id);
-                        SuccessLogin(out, token_id);
+                        allTokenIds.add(token_id);
+                        successLogin(out, token_id);
                         PeerToTracker secondInput = (PeerToTracker) in.readObject();
                         System.out.printf("[Tracker %s , %d] GOT PEER INFO " + secondInput.toString() + " \n", getIp(), getPort());
 
-                        Info infoTemp = Username_toInfo.get(req.username);
+                        Info infoTemp = usernameToInfo.get(req.username);
                         infoTemp.ip = secondInput.ip;
                         infoTemp.port = secondInput.port;
                         infoTemp.Shared_directory = secondInput.shared_directory;
 
                         for(String i: infoTemp.Shared_directory){
                             System.out.println(i);
-                            Files_toInfo.get(i).put(secondInput.username, infoTemp);
+                            filesToInfo.get(i).put(secondInput.username, infoTemp);
                         }
                     } else {
-                        FailureLogin(out);
+                        failureLogin(out);
                     }
                 } else if (req.method == Method.LOGOUT) {
-                    if(All_tokenIds.contains(req.token_id)) {
+                    if(allTokenIds.contains(req.token_id)) {
                         System.out.println("Token ID"+req.token_id);
-                        All_tokenIds.remove((Integer) req.token_id);
-                        ArrayList<String> filesOfRemoved = Username_toInfo.get(req.username).Shared_directory;
+                        allTokenIds.remove((Integer) req.token_id);
+                        ArrayList<String> filesOfRemoved = usernameToInfo.get(req.username).Shared_directory;
 
                         for(String i: filesOfRemoved){
                             // It removes from Files_toInfo all the Shared_directory files in the Concurrent hashmap with key "req.token_id" which is the token given from the peer.
-                            Files_toInfo.get(i).remove(req.username);
+                            filesToInfo.get(i).remove(req.username);
                         }
-                        SuccessLogout(out);
+                        successLogout(out);
                     }else{
-                        FailureLogout(out);
+                        failureLogout(out);
                     }
 
                 } else if (req.method == Method.LIST) {
                     replyList(out);
                 } else if (req.method == Method.DETAILS) {
-                    ConcurrentHashMap<String, Info> peersWithFile =  Files_toInfo.get(req.fileName);
+                    ConcurrentHashMap<String, Info> peersWithFile =  filesToInfo.get(req.fileName);
                     ArrayList<Info> activeFiles = new ArrayList<>();
                     for(Map.Entry<String, Info> i : peersWithFile.entrySet()) {
                         StatusCode status = checkActive(i.getValue().ip, i.getValue().port);
                         if (status != null) {
                             if (!status.equals(StatusCode.PEER_ISACTIVE)) {
-                                All_tokenIds.remove(i.getValue().tokenId);
-                                ArrayList<String> filesOfRemoved = Username_toInfo.get(i.getKey()).Shared_directory;
+                                allTokenIds.remove(i.getValue().tokenId);
+                                ArrayList<String> filesOfRemoved = usernameToInfo.get(i.getKey()).Shared_directory;
 
                                 for (String j : filesOfRemoved) {
-                                    Files_toInfo.get(j).remove(i.getKey());
+                                    filesToInfo.get(j).remove(i.getKey());
                                 }
                                 peersWithFile.remove(i.getKey()); //TODO maybe wrong
                             } else {
@@ -165,12 +162,12 @@ public class Tracker {
                     }
                 } else if (req.method == Method.NOTIFY_SUCCESSFUL) {
                     // Update Files_toInfo data structure, essentially we add peer's info to the array of the peers that have the specific file
-                    Info infoTemp = Username_toInfo.get(req.username);
-                    Files_toInfo.get(req.fileName).put(req.username, infoTemp);
+                    Info infoTemp = usernameToInfo.get(req.username);
+                    filesToInfo.get(req.fileName).put(req.username, infoTemp);
                     // Moreover, increase count downloads index.
-                    Username_toInfo.get(req.peerUsername).count_downloads++;
+                    usernameToInfo.get(req.peerUsername).count_downloads++;
                 } else if(req.method == Method.NOTIFY_FAILED){
-                    Username_toInfo.get(req.peerUsername).count_failures++;
+                    usernameToInfo.get(req.peerUsername).count_failures++;
                 }else{
                     System.out.println("Got unexpected request");
                 }
@@ -220,9 +217,9 @@ public class Tracker {
         return null;
     }
 
-    public void FillFiles_toToken(){
-        for(String i : All_files){
-            Files_toInfo.put(i, new ConcurrentHashMap<String, Info>());
+    public void fillFilesToToken(){
+        for(String i : allFiles){
+            filesToInfo.put(i, new ConcurrentHashMap<String, Info>());
         }
     }
 
@@ -230,50 +227,50 @@ public class Tracker {
         int min=0;
         int max=100;
         int tokenid = 0;
-        while(All_tokenIds.contains(tokenid)) {
+        while(allTokenIds.contains(tokenid)) {
             tokenid = (int) ((Math.random() * (max - min)) + min);
         }
         return tokenid;
     }
 
-    public void FailureRegister(ObjectOutputStream out) throws IOException {
+    public void failureRegister(ObjectOutputStream out) throws IOException {
         AnyToPeer reply = new AnyToPeer();
         reply.statusCode = StatusCode.UNSUCCESSFUL_REGISTER;
         System.out.println(reply.toString());
         out.writeObject(reply);
     }
 
-    public void SuccessRegister(ObjectOutputStream out) throws IOException {
+    public void successRegister(ObjectOutputStream out) throws IOException {
         AnyToPeer reply = new AnyToPeer();
         reply.statusCode = StatusCode.SUCCESSFUL_REGISTER;
         System.out.println(reply.toString());
         out.writeObject(reply);
     }
 
-    public void FailureLogin(ObjectOutputStream out) throws IOException {
+    public void failureLogin(ObjectOutputStream out) throws IOException {
         AnyToPeer reply = new AnyToPeer();
         reply.statusCode = StatusCode.UNSUCCESSFUL_LOGIN;
         System.out.println(reply.toString());
         out.writeObject(reply);
     }
 
-    public void SuccessLogin(ObjectOutputStream out, int token) throws IOException {
+    public void successLogin(ObjectOutputStream out, int token) throws IOException {
         AnyToPeer reply = new AnyToPeer();
-        All_tokenIds.add(token);
+        allTokenIds.add(token);
         reply.token_id = token;
         reply.statusCode = StatusCode.SUCCESSFUL_LOGIN;
         System.out.println(reply.toString());
         out.writeObject(reply);
     }
 
-    public void SuccessLogout(ObjectOutputStream out) throws IOException {
+    public void successLogout(ObjectOutputStream out) throws IOException {
         AnyToPeer reply = new AnyToPeer();
         reply.statusCode = StatusCode.SUCCESSFUL_LOGOUT;
         System.out.println(reply.toString());
         out.writeObject(reply);
     }
 
-    public void FailureLogout(ObjectOutputStream out) throws IOException {
+    public void failureLogout(ObjectOutputStream out) throws IOException {
         AnyToPeer reply = new AnyToPeer();
         reply.statusCode = StatusCode.UNSUCCESSFUL_LOGOUT;
         System.out.println(reply.toString());
@@ -282,7 +279,7 @@ public class Tracker {
 
     public void replyList(ObjectOutputStream out) throws IOException {
         AnyToPeer reply = new AnyToPeer();
-        reply.All_files = All_files;
+        reply.All_files = allFiles;
         System.out.println(reply.toString());
         out.writeObject(reply);
     }
