@@ -9,10 +9,15 @@ import java.util.concurrent.ConcurrentHashMap;
 
 
 public class Tracker {
+    // Hash map for Registered peers. ( Username, Password )
     ConcurrentHashMap<String, String> registeredPeers = new ConcurrentHashMap<>();
+    // Hash map to combine ( Username, Info ). For Info details please open Info.java file.
     ConcurrentHashMap<String, Info> usernameToInfo = new ConcurrentHashMap<>();
+    // This Hash map help us to know which peers has every file. ( File, Hash map of Info )
     ConcurrentHashMap<String, ConcurrentHashMap<String, Info>> filesToInfo = new ConcurrentHashMap<>();
+    // Stores all token ids.
     ArrayList<Integer> allTokenIds = new ArrayList<>();
+    // Stores all file names
     ArrayList<String> allFiles;
     private final String ip;
     private final int port;
@@ -88,6 +93,7 @@ public class Tracker {
                 PeerToTracker req = (PeerToTracker) in.readObject();
                 System.out.printf("[Tracker %s , %d] GOT REQUEST " + req.toString() + "\n", getIp(), getPort());
 
+                // Depending on Input object performs certain functions.
                 if (req.method == Method.REGISTER) {
                     if (registeredPeers.containsKey(req.username)) {
                         failureRegister(out);
@@ -183,7 +189,7 @@ public class Tracker {
             }
         }
     }
-
+    // Check peer if is active. Return his status
     public static StatusCode checkActive(String peerIp, int peerPort){
         Socket socket = null;
         ObjectOutputStream out = null;
@@ -233,6 +239,7 @@ public class Tracker {
         return tokenid;
     }
 
+    // All the following functions refer to replies to a peer.
     public void failureRegister(ObjectOutputStream out) throws IOException {
         AnyToPeer reply = new AnyToPeer();
         reply.statusCode = StatusCode.UNSUCCESSFUL_REGISTER;
