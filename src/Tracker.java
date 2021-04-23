@@ -6,6 +6,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ThreadLocalRandom;
 
 
 public class Tracker {
@@ -230,11 +231,10 @@ public class Tracker {
     }
 
     public int getRandomTokenId() {
-        int min=0;
-        int max=100;
         int tokenid = 0;
         while(allTokenIds.contains(tokenid)) {
-            tokenid = (int) ((Math.random() * (max - min)) + min);
+            // Sets a token id within range 0 to MAX INT.
+            tokenid = ThreadLocalRandom.current().nextInt(0, Integer.MAX_VALUE);
         }
         return tokenid;
     }
