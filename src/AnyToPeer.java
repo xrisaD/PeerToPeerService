@@ -1,6 +1,7 @@
 import java.io.Serializable;
 import java.util.ArrayList;
 
+// AnytoPeer: messages between peers and tracker to peer
 public class AnyToPeer implements Serializable {
     public Method method;
     public StatusCode statusCode;

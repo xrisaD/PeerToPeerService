@@ -177,11 +177,11 @@ public class Peer {
 
             PeerToTracker peerToTracker = new PeerToTracker();
             peerToTracker.method = Method.LIST;
-            System.out.println(peerToTracker.toString());
+            System.out.println("REPLY: " + peerToTracker.toString());
             out.writeObject(peerToTracker);
 
             AnyToPeer reply = (AnyToPeer) in.readObject();
-            System.out.println("REPLY: "+reply.toString());
+            System.out.println("REPLY: " + reply.toString());
             return reply.allFiles;
 
         } catch (UnknownHostException e) {
@@ -216,11 +216,11 @@ public class Peer {
             peerToTracker.method = Method.LOGIN;
             peerToTracker.username = this.username;
             peerToTracker.password = this.password;
-            System.out.println(peerToTracker.toString());
+            System.out.println("REPLY: " + peerToTracker.toString());
             out.writeObject(peerToTracker);
 
             AnyToPeer reply = (AnyToPeer) in.readObject();
-            System.out.println("REPLY: "+reply.toString());
+            System.out.println("REPLY: " + reply.toString());
 
             if (reply.statusCode == StatusCode.SUCCESSFUL_LOGIN) {
                 setToken_id(reply.tokenΙd);
@@ -261,11 +261,11 @@ public class Peer {
             peerToTracker.method = Method.LOGOUT;
             peerToTracker.token_id = token_id;
             peerToTracker.username = username;
-            System.out.println(peerToTracker.toString());
+            System.out.println("REPLY: " + peerToTracker.toString());
             out.writeObject(peerToTracker);
 
             AnyToPeer reply = (AnyToPeer) in.readObject();
-            System.out.println("REPLY: "+reply.toString());
+            System.out.println("REPLY: " + reply.toString());
 
             return reply.statusCode;
 
@@ -300,11 +300,11 @@ public class Peer {
             peerToTracker.method = Method.REGISTER;
             peerToTracker.username = username;
             peerToTracker.password = password;
-            System.out.println(peerToTracker.toString());
+            System.out.println("REPLY: " + peerToTracker.toString());
             out.writeObject(peerToTracker);
 
             AnyToPeer reply = (AnyToPeer) in.readObject();
-            System.out.println("REPLY: "+reply.toString());
+            System.out.println("REPLY: " + reply.toString());
 
             return reply.statusCode;
 
@@ -370,10 +370,9 @@ public class Peer {
             PeerToTracker peerToTracker = new PeerToTracker();
             peerToTracker.method = Method.NOTIFY_FAILED;
             peerToTracker.peerUsername = username;
-            System.out.println(peerToTracker.toString());
+            System.out.println("REPLY: " + peerToTracker.toString());
             out.writeObject(peerToTracker);
 
-            System.out.println(peerToTracker.toString());
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -508,13 +507,13 @@ public class Peer {
                     StatusCode statusCode = isActive();
                     PeerToTracker peerToTracker = new PeerToTracker();
                     peerToTracker.statusCode = statusCode;
-                    System.out.println(peerToTracker.toString());
+                    System.out.println("REPLY: " + peerToTracker.toString());
                     out.writeObject(peerToTracker);
                 }else if(req.method == Method.CHECK_ACTIVE_PEER_TO_PEER){
                     StatusCode statusCode = isActive();
                     AnyToPeer anyToPeer = new AnyToPeer();
                     anyToPeer.statusCode = statusCode;
-                    System.out.println(anyToPeer.toString());
+                    System.out.println("REPLY: " + anyToPeer.toString());
                     out.writeObject(anyToPeer);
                 }else if(req.method == Method.SIMPLE_DOWNLOAD){
                     if(fileTitles.contains(req.fileName)){
