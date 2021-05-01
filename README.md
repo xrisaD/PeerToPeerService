@@ -18,3 +18,6 @@ java Tracker IP PORT USER_NAME PASSWORD PATH_OF_SHARED_DIRECTORY
 - USER_NAME: PEER'S USERNAME
 - PASSWORD: PEER'S PASSWORD
 - PATH_OF_SHARED_DIRECTORY: all files in that directory will be shared 
+
+#### Architecture:
+[<img src="https://www.researchgate.net/profile/Changhoon-Lee-2/publication/259635464/figure/fig1/AS:297232688533507@1447877203422/Structure-of-a-BitTorrent-network-for-data-sharing-with-peers-on-the-network-who-receive.png">]()
