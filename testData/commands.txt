@@ -1,8 +1,0 @@
-Tracker:
-java Tracker 127.0.0.1 5000 C:\Users\Xrisa\Desktop\testData\tracker
-
-
-Peer1:
-java Peer 127.0.0.1 5001 xrisa diko C:\Users\Xrisa\Desktop\testData\peer1\shared_directory\
-
-java Peer 127.0.0.1 5004 xrisa diko C:\Users\Xrisa\Desktop\testData\peer2\shared_directory\
