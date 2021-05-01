@@ -2,10 +2,8 @@
 
 <ins>Tracker</ins>
 ```console
-java Tracker IP PORT PATH_OF_LISTFILE
+java Tracker PATH_OF_LISTFILE
 ```
-- IP: TRACKER'S IP 
-- PORT: TRACKER'S PORT
 - PATH_OF_LISTFILE: The path of the file which contains all the files in the P2P system <br>
 File Format: each line of the file contains the name of a file, file's name is unique
 
