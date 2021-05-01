@@ -12,7 +12,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public class Tracker {
     static final String ip = "127.0.0.1";
     static final int port = 5000;
-    
+
     // Hash map for Registered peers. ( Username, Password )
     ConcurrentHashMap<String, String> registeredPeers = new ConcurrentHashMap<>();
     // Hash map to combine ( Username, Info ). For Info details please open Info.java file.
@@ -66,7 +66,7 @@ public class Tracker {
 
     public static void main(String[] args){
         try{
-            Tracker p = new Tracker(args[2]);
+            Tracker p = new Tracker(args[0]);
             p.startServer();
 
         }catch (Exception e) {

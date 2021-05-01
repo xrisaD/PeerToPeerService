@@ -15,11 +15,8 @@ public class ProjectPart2 {
         String trackerPath = args[1];
         String testDataPath = args[2];
 
-        String ip = "127.0.0.1";
-        int port = 5000;
-
         // Start Tracker
-        String trackerCommand = String.format("java -cp %s Tracker %s %d %s" , outPath, ip, port, trackerPath);
+        String trackerCommand = String.format("java -cp %s Tracker %s" , outPath, trackerPath);
         Process trackerProcess= Runtime.getRuntime().exec(trackerCommand);
         StreamGobbler trackerErrorGobbler = new StreamGobbler(trackerProcess.getErrorStream());
         StreamGobbler trackerOutputGobbler = new StreamGobbler(trackerProcess.getInputStream());
@@ -34,6 +31,8 @@ public class ProjectPart2 {
             sharedDirectories.add(path);
         }
 
+        String ip = "127.0.0.1";
+        int port = 5000;
         // Start peers
         ArrayList<Process> peers = new ArrayList<>();
         String name = "name";
