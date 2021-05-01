@@ -9,9 +9,12 @@ public class ProjectPart2 {
     // Arguments:
     // 0: outPath: path that the class files are places
     // 1: tracker's input with the path of the file
+    // 2: testData path
     public static void main(String[] args) throws IOException {
         String outPath = args[0];
         String trackerPath = args[1];
+        String testDataPath = args[2];
+
         String ip = "127.0.0.1";
         int port = 5000;
 
@@ -23,6 +26,14 @@ public class ProjectPart2 {
         trackerErrorGobbler.start();
         trackerOutputGobbler.start();
 
+        // we will use testData path in order to create the path for each on the peers
+        // format: PATH + peerX\shared_directory\
+        ArrayList<String> sharedDirectories = new ArrayList<String>();
+        for (int i = 0 ; i < 10 ; i++){
+            String path = testDataPath + "peer" + i + "\\shared_directory\\";
+            sharedDirectories.add(path);
+        }
+
         // Start peers
         ArrayList<Process> peers = new ArrayList<>();
         String name = "name";
@@ -31,7 +42,7 @@ public class ProjectPart2 {
         for (int i = 0 ; i < 10 ; i++){
             port++;
             // Start a Peer
-            String peerCommand = String.format("java -cp %s Peer %s %d %s %s %s" , outPath, ip, port,name+i ,password+i, trackerPath);
+            String peerCommand = String.format("java -cp %s Peer %s %d %s %s %s %b" , outPath, ip, port,name+i ,password+i, sharedDirectories.get(i), true);
             Process peerProcess = Runtime.getRuntime().exec(peerCommand);
             peers.add(peerProcess);
             StreamGobbler peerErrorGobbler = new StreamGobbler(peerProcess.getErrorStream());

@@ -585,11 +585,17 @@ public class Peer {
             // 2: username, 3: password
             // 4: shared_directory path
             Peer p = new Peer(args[0], parseInt(args[1]), args[2], args[3], args[4]);
+            boolean autoMode =Boolean.parseBoolean(args[5]);
 
-            PeerMainThread peerMainThread = new PeerMainThread(p);
-            // start peer's thread for command line requests
-            peerMainThread.start();
-
+            if(!autoMode) {
+                PeerMainThread peerMainThread = new PeerMainThread(p);
+                // start peer's thread for command line requests
+                peerMainThread.start();
+            }else{
+                // Project part 2 logic goes here
+                PeerAutoModeThread peerAutoModeThread = new PeerAutoModeThread(p);
+                peerAutoModeThread.start();
+            }
             // start server that get requests from the tracker or other peers
             p.startServer();
 
