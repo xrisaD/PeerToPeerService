@@ -91,7 +91,7 @@ public class PeerMainThread extends Thread {
                         boolean successfulDownload = p.simpleDownload(fileName, scores);
                         System.out.println("Download completed successfully: " + successfulDownload);
                         if(successfulDownload){
-                            p.fileTitles.add(fileName);
+                            p.fileNames.add(fileName);
                         }
                     }else{
                         System.out.println("No peer with this file");

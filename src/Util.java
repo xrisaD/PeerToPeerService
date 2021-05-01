@@ -63,4 +63,23 @@ public class Util {
         }
     }
 
+    public static byte[][] divide(byte[] in, int partitionSize)
+    {
+        int partitionCount =  (int)Math.ceil((double)in.length / (double) partitionSize);
+
+        byte[][] temp = new byte[partitionCount][];
+
+        for (int p = 0; p < partitionCount; p++)
+        {
+            int start = p * partitionSize;
+            int len = (p != partitionCount - 1) ? partitionSize : in.length - start;
+            byte[] partition = new byte[len];
+
+            System.arraycopy(in, start, partition, 0, len);
+
+            temp[p] = partition;
+        }
+
+        return temp;
+    }
 }

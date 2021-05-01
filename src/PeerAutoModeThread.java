@@ -11,5 +11,7 @@ public class PeerAutoModeThread extends Thread {
 
         statusCode = this.p.login();
         System.out.println("[PEER] LOGIN " + statusCode + " " + this.p.getIp() + " " + this.p.getPort());
+
+
     }
 }

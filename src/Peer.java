@@ -19,10 +19,11 @@ public class Peer {
     public String username;
     public String password;
 
-    public ArrayList<String> fileTitles;
+    public ArrayList<String> fileNames;
 
     public String sharedDirectoryPath;
 
+    public int partitionSize = 500000;
 
     // Setters and getters
     public String getIp() {
@@ -430,20 +431,31 @@ public class Peer {
     // inform tracker about the files the peer has in the shared directory
     public void inform(ObjectOutputStream out) throws IOException {
         // read peer's files
-        this.fileTitles = Util.readSharedDirectory(sharedDirectoryPath);
-        for (String file: this.fileTitles) {
+        this.fileNames = Util.readSharedDirectory(sharedDirectoryPath);
+        for (String file: this.fileNames) {
             System.out.println(file);
         }
-
+        if(this.fileNames.size()>=1) {
+            partition();
+        }
         PeerToTracker peerToTracker = new PeerToTracker();
         peerToTracker.method = Method.INFORM;
-        peerToTracker.sharedDirectory = this.fileTitles;
+        peerToTracker.sharedDirectory = this.fileNames;
         peerToTracker.ip = this.ip;
         peerToTracker.port = this.port;
         peerToTracker.username = this.username;
         System.out.println(peerToTracker.toString());
         out.writeObject(peerToTracker);
     }
+
+    public void partition(){
+        // partition files
+        for (int i = 0; i < this.fileNames.size(); i++){
+            byte[] file = Util.loadFile(sharedDirectoryPath, this.fileNames.get(i));
+            Util.divide(file, this.partitionSize);
+        }
+    }
+
 
     // computing a score for each peer
     public HashMap<Double, Info> computeScores(ArrayList<Info> peers){
@@ -516,7 +528,7 @@ public class Peer {
                     System.out.println("REPLY: " + anyToPeer.toString());
                     out.writeObject(anyToPeer);
                 }else if(req.method == Method.SIMPLE_DOWNLOAD){
-                    if(fileTitles.contains(req.fileName)){
+                    if(fileNames.contains(req.fileName)){
                         AnyToPeer anyToPeer = new AnyToPeer();
                         anyToPeer.statusCode = StatusCode.FILE_FOUND;
                         anyToPeer.buffer = Util.loadFile(sharedDirectoryPath, req.fileName);
