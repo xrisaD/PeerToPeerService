@@ -10,6 +10,9 @@ import java.util.concurrent.ThreadLocalRandom;
 
 
 public class Tracker {
+    static final String ip = "127.0.0.1";
+    static final int port = 5000;
+    
     // Hash map for Registered peers. ( Username, Password )
     ConcurrentHashMap<String, String> registeredPeers = new ConcurrentHashMap<>();
     // Hash map to combine ( Username, Info ). For Info details please open Info.java file.
@@ -20,8 +23,6 @@ public class Tracker {
     ArrayList<Integer> allTokenIds = new ArrayList<>();
     // Stores all file names
     ArrayList<String> allFiles;
-    private final String ip;
-    private final int port;
 
     public String getIp() {
         return ip;
@@ -31,9 +32,8 @@ public class Tracker {
         return port;
     }
 
-    public Tracker(String ip, int port, String fileDownloadListPath) {
-        this.ip = ip;
-        this.port = port;
+    public Tracker(String fileDownloadListPath) {
+
         // Reads all files from specific file in given path.
         allFiles = Util.readFileDownloadList(fileDownloadListPath);
 
@@ -66,7 +66,7 @@ public class Tracker {
 
     public static void main(String[] args){
         try{
-            Tracker p = new Tracker(args[0],Integer.parseInt(args[1]), args[2]);
+            Tracker p = new Tracker(args[2]);
             p.startServer();
 
         }catch (Exception e) {
