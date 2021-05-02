@@ -5,6 +5,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static java.lang.Integer.parseInt;
 
@@ -23,7 +24,7 @@ public class Peer {
 
     public String sharedDirectoryPath;
 
-    public int partitionSize = 500000;
+    public int partitionSize = 500000; // 0.5 MB
 
     // Setters and getters
     public String getIp() {
@@ -53,6 +54,8 @@ public class Peer {
     public void setPassword(String password) {
         this.password = password;
     }
+
+    ConcurrentHashMap<String, byte[][]> allPartitions = new ConcurrentHashMap<String, byte[][]>();
 
     // check if peer is active
     public StatusCode isActive(){
@@ -448,14 +451,14 @@ public class Peer {
         out.writeObject(peerToTracker);
     }
 
+    // partition all files
     public void partition(){
-        // partition files
         for (int i = 0; i < this.fileNames.size(); i++){
             byte[] file = Util.loadFile(sharedDirectoryPath, this.fileNames.get(i));
-            Util.divide(file, this.partitionSize);
+            byte[][] filePartition = Util.divide(file, this.partitionSize);
+            allPartitions.put(this.fileNames.get(i), filePartition);
         }
     }
-
 
     // computing a score for each peer
     public HashMap<Double, Info> computeScores(ArrayList<Info> peers){

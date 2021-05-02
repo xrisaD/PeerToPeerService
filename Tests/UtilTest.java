@@ -1,16 +1,12 @@
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
+
+import java.util.Arrays;
 
 import static org.junit.Assert.*;
 
 public class UtilTest {
-    
+
     @org.junit.Test
-    public void divideBytesArray() {
+    public void divideBytesArrayWithSizeGreaterThanOne() {
         byte[] bytes = {1,2,3,4,5};
         byte[][] outBytes = Util.divide(bytes, 2);
 
@@ -18,6 +14,24 @@ public class UtilTest {
         assertEquals(2, outBytes[0].length);
         assertEquals(2, outBytes[1].length);
         assertEquals(1, outBytes[2].length);
+
+        byte[] inBytes = Util.assemble(outBytes);
+        assertEquals(bytes.length, inBytes.length);
+        boolean areEqual = Arrays.equals(bytes, inBytes);
+        assertTrue(areEqual);
     }
 
+    @org.junit.Test
+    public void divideBytesArrayWithSizeOne() {
+        byte[] bytes = {1};
+        byte[][] outBytes = Util.divide(bytes, 2);
+
+        assertEquals(1, outBytes.length);
+        assertEquals(1, outBytes[0].length);
+
+        byte[] inBytes = Util.assemble(outBytes);
+        assertEquals(bytes.length, inBytes.length);
+        boolean areEqual = Arrays.equals(bytes, inBytes);
+        assertTrue(areEqual);
+    }
 }

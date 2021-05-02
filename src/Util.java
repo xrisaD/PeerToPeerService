@@ -63,8 +63,8 @@ public class Util {
         }
     }
 
-    public static byte[][] divide(byte[] in, int partitionSize)
-    {
+    // divide an array of bytes
+    public static byte[][] divide(byte[] in, int partitionSize) {
         int partitionCount =  (int)Math.ceil((double)in.length / (double) partitionSize);
 
         byte[][] temp = new byte[partitionCount][];
@@ -81,5 +81,25 @@ public class Util {
         }
 
         return temp;
+    }
+
+    public static byte[] assemble(byte[][] in){
+        int size = 0;
+        if(in.length==1) {
+            size = in[0].length;
+        }else{
+            size = (in.length - 1)*in[0].length + in[in.length-1].length;
+        }
+        byte[] out = new byte[size];
+        int s = 0;
+
+        for (int p = 0; p < in.length; p++){
+            for (int i = 0; i < in[p].length; i++){
+                out[s] = in[p][i];
+                s++;
+            }
+        }
+
+        return out;
     }
 }
