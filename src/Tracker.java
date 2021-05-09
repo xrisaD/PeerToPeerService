@@ -105,6 +105,7 @@ public class Tracker {
                         successRegister(out);
                     }
                 } else if (req.method == Method.LOGIN) {
+                    // SEEDER BIT ?
                     if (registeredPeers.containsKey(req.username) && registeredPeers.get(req.username).equals(req.password)) {
                         int token_id = getRandomTokenId();
                         allTokenIds.add(token_id);

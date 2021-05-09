@@ -7,6 +7,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class Util {
 
@@ -108,5 +109,24 @@ public class Util {
         ArrayList<String> differences = new ArrayList<>(all);
         differences.removeAll(sp);
         return differences;
+    }
+
+    // select randomly a file
+    public static String select(ArrayList<String> files){
+        if(files.size()>0) {
+            int x =  ThreadLocalRandom.current().nextInt(0, files.size());
+            return files.get(x);
+        }else{
+            return null;
+        }
+    }
+
+    // TODO: TESTS
+    public static ArrayList<Integer> getNumbersInRange(int start, int end) {
+        ArrayList<Integer> result = new ArrayList<>();
+        for (int i = start; i < end; i++) {
+            result.add(i);
+        }
+        return result;
     }
 }

@@ -10,7 +10,7 @@ public class UtilTest {
     public void divideBytesArrayWithSizeGreaterThanOne() {
         byte[] bytes = {1,2,3,4,5};
         byte[][] outBytes = Util.divide(bytes, 2);
-
+        // [[1 2] [3 4] [5]]
         assertEquals(3, outBytes.length);
         assertEquals(2, outBytes[0].length);
         assertEquals(2, outBytes[1].length);

@@ -55,6 +55,7 @@ public class Peer {
         this.password = password;
     }
 
+    // filename -> array of partitions
     ConcurrentHashMap<String, byte[][]> allPartitions = new ConcurrentHashMap<String, byte[][]>();
 
     // check if peer is active
@@ -447,17 +448,26 @@ public class Peer {
         peerToTracker.ip = this.ip;
         peerToTracker.port = this.port;
         peerToTracker.username = this.username;
+
+        peerToTracker.pieces = null;
+        peerToTracker.seederBit = null;
+
         System.out.println(peerToTracker.toString());
         out.writeObject(peerToTracker);
     }
 
+    // TODO: TESTS
     // partition all files
-    public void partition(){
+    public HashMap<String, ArrayList<Integer>> partition(){
+        HashMap<String, ArrayList<Integer>> pieces = new HashMap<String, ArrayList<Integer>>();
         for (int i = 0; i < this.fileNames.size(); i++){
             byte[] file = Util.loadFile(sharedDirectoryPath, this.fileNames.get(i));
             byte[][] filePartition = Util.divide(file, this.partitionSize);
             allPartitions.put(this.fileNames.get(i), filePartition);
+            ArrayList<Integer> parts = Util.getNumbersInRange(1, filePartition.length);
+            pieces.put(this.fileNames.get(i), parts);
         }
+        return pieces;
     }
 
     // computing a score for each peer
@@ -541,6 +551,8 @@ public class Peer {
                         anyToPeer.statusCode = StatusCode.FILE_NOTFOUND;
                         out.writeObject(anyToPeer);
                     }
+                }else if(req.method == Method.SEEDER_SERVE){
+
                 }
             } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();

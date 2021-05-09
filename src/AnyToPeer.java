@@ -1,5 +1,6 @@
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 // AnytoPeer: messages between peers and tracker to peer
 public class AnyToPeer implements Serializable {

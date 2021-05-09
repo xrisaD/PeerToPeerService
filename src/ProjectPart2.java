@@ -23,6 +23,16 @@ public class ProjectPart2 {
         trackerErrorGobbler.start();
         trackerOutputGobbler.start();
 
+        Scanner sc = new Scanner(System.in);
+
+        while(true) {
+            String line = sc.nextLine();
+            if (line.trim().toLowerCase().equals("0")) {
+                System.out.println("Continue with peers...");
+                break;
+            }
+        }
+
         // we will use testData path in order to create the path for each on the peers
         // format: PATH + peerX\shared_directory\
         ArrayList<String> sharedDirectories = new ArrayList<String>();
@@ -50,7 +60,7 @@ public class ProjectPart2 {
             peerOutputGobbler.start();
         }
 
-        Scanner sc = new Scanner(System.in);
+        sc = new Scanner(System.in);
 
         while(true) {
             String line = sc.nextLine();

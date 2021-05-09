@@ -18,7 +18,16 @@ public class PeerAutoModeThread extends Thread {
         ArrayList<String> peersFiles = p.fileNames; // peer's files
         ArrayList<String> forDownload = Util.difference(allFiles, peersFiles); // the files that the peer doesn't have
 
-        
+        while(forDownload.size()>0){
+            String file = Util.select(forDownload); // select the next file for download
+
+            // details
+
+            // while not all -> download
+
+            // ALL LOGIC GOES HERE
+        }
+
 
     }
 }

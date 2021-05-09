@@ -1,5 +1,6 @@
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 class PeerToTracker implements Serializable{
     public Method method;
@@ -17,6 +18,8 @@ class PeerToTracker implements Serializable{
     public String ip;
     public int port;
     ArrayList<String> sharedDirectory; //hash?
+    HashMap<String, ArrayList<Integer>> pieces;
+    HashMap<String, Boolean> seederBit;
 
     // details
     public String fileName;
