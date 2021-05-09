@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 public class Util {
@@ -101,5 +102,11 @@ public class Util {
         }
 
         return out;
+    }
+
+    public static ArrayList<String> difference(ArrayList<String> all, ArrayList<String> sp){
+        ArrayList<String> differences = new ArrayList<>(all);
+        differences.removeAll(sp);
+        return differences;
     }
 }

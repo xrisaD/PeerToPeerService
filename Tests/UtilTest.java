@@ -1,4 +1,5 @@
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
 import static org.junit.Assert.*;
@@ -34,4 +35,22 @@ public class UtilTest {
         boolean areEqual = Arrays.equals(bytes, inBytes);
         assertTrue(areEqual);
     }
+
+    @org.junit.Test
+    public void difference() {
+        ArrayList<String> allCars = new ArrayList<String>();
+        allCars.add("Volvo");
+        allCars.add("BMW");
+        allCars.add("Ford");
+        allCars.add("Mazda");
+
+        ArrayList<String> cars = new ArrayList<String>();
+        cars.add("Volvo");
+
+        ArrayList<String> x = Util.difference(allCars, cars);
+
+        assertEquals(3, x.size());
+
+    }
+
 }
