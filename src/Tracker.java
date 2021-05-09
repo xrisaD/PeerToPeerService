@@ -4,7 +4,6 @@ import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
@@ -25,6 +24,7 @@ public class Tracker {
     // Stores all file names
     ArrayList<String> allFiles;
 
+
     public String getIp() {
         return ip;
     }
@@ -34,7 +34,6 @@ public class Tracker {
     }
 
     public Tracker(String fileDownloadListPath) {
-
         // Reads all files from specific file in given path.
         allFiles = Util.readFileDownloadList(fileDownloadListPath);
 
@@ -106,7 +105,6 @@ public class Tracker {
                         successRegister(out);
                     }
                 } else if (req.method == Method.LOGIN) {
-                    // SEEDER BIT ?
                     if (registeredPeers.containsKey(req.username) && registeredPeers.get(req.username).equals(req.password)) {
                         int token_id = getRandomTokenId();
                         allTokenIds.add(token_id);
@@ -118,8 +116,6 @@ public class Tracker {
                         infoTemp.ip = secondInput.ip;
                         infoTemp.port = secondInput.port;
                         infoTemp.sharedDirectory = secondInput.sharedDirectory;
-                        infoTemp.pieces = secondInput.pieces;
-                        infoTemp.seederBit = secondInput.seederBit;
 
                         for (String i : infoTemp.sharedDirectory) {
                             filesToInfo.get(i).put(secondInput.username, infoTemp);
@@ -156,7 +152,7 @@ public class Tracker {
                                 for (String j : filesOfRemoved) {
                                     filesToInfo.get(j).remove(i.getKey());
                                 }
-                                peersWithFile.remove(i.getKey());
+                                peersWithFile.remove(i.getKey()); //TODO maybe wrong
                             } else {
                                 activeFiles.add(i.getValue());
                             }
