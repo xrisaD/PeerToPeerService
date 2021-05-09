@@ -439,8 +439,11 @@ public class Peer {
         for (String file: this.fileNames) {
             System.out.println(file);
         }
+        HashMap<String, ArrayList<Integer>> pieces = null;
+        HashMap<String, Boolean> seederBit = null;
         if(this.fileNames.size()>=1) {
-            partition();
+            pieces = partition();
+            seederBit = createSeederBits();
         }
         PeerToTracker peerToTracker = new PeerToTracker();
         peerToTracker.method = Method.INFORM;
@@ -449,11 +452,18 @@ public class Peer {
         peerToTracker.port = this.port;
         peerToTracker.username = this.username;
 
-        peerToTracker.pieces = null;
-        peerToTracker.seederBit = null;
+        peerToTracker.pieces = pieces;
+        peerToTracker.seederBit = seederBit;
 
         System.out.println(peerToTracker.toString());
         out.writeObject(peerToTracker);
+    }
+    public HashMap<String, Boolean> createSeederBits(){
+        HashMap<String, Boolean> seederBits = new HashMap<String, Boolean>();
+        for (int i = 0; i < this.fileNames.size(); i++){
+            seederBits.put(this.fileNames.get(i), true);
+        }
+        return seederBits;
     }
 
     // TODO: TESTS
