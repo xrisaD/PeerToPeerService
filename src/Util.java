@@ -121,7 +121,6 @@ public class Util {
         }
     }
 
-    // TODO: TESTS
     public static ArrayList<Integer> getNumbersInRange(int start, int end) {
         ArrayList<Integer> result = new ArrayList<>();
         for (int i = start; i < end; i++) {
