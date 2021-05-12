@@ -67,6 +67,8 @@ public class Peer {
     // filename -> array of partitions
     ConcurrentHashMap<String, byte[][]> allPartitions = new ConcurrentHashMap<String, byte[][]>();
 
+    ConcurrentHashMap<String , ArrayList<Partition>> nonCompletedParts = new ConcurrentHashMap<>();
+
     // check if peer is active
     public StatusCode isActive(){
         if(token_id != -1) {
@@ -580,15 +582,19 @@ public class Peer {
                         try{
                             Thread.sleep(200);
                         } catch(InterruptedException e){System.out.println(e); }
-
+                        ArrayList<AnyToPeer> tempRequests;
                         synchronized (serveRequests) {
-                            ArrayList<AnyToPeer> tempRequests = new ArrayList<>(colDownRequests);
+                            tempRequests = new ArrayList<>(colDownRequests);
                             serveRequests.clear();
                             lockServe.compareAndExchange(true, false);
                         }
 
-                        int randomPeer = ThreadLocalRandom.current().nextInt(0, serveRequests.size());
-                        //TODO: check if new thread needed
+                        int randomPeer = ThreadLocalRandom.current().nextInt(0, tempRequests.size());
+
+                        byte[][] sendRandom = allPartitions.get(tempRequests.get(randomPeer).fileName);
+                        int randomByte = ThreadLocalRandom.current().nextInt(0, sendRandom.length);
+                        //peer send random partition to a requested peer
+                        sendPartition(sendRandom[randomByte], tempRequests.get(randomPeer), Method.SEEDER_SERVE_SUCCESSFUL, randomByte);
                     }
                 }else if(req.method == Method.COLLABORATIVE_DOWNLOAD){
                     synchronized (colDownRequests){
@@ -599,12 +605,24 @@ public class Peer {
                             Thread.sleep(200);
                         } catch(InterruptedException e){System.out.println(e); }
 
+                        ArrayList<AnyToPeer> tempRequests;
                         synchronized (colDownRequests) {
-                            ArrayList<AnyToPeer> tempRequests = new ArrayList<>(colDownRequests);
+                            tempRequests = new ArrayList<>(colDownRequests);
                             colDownRequests.clear();
                             lockColDown.compareAndExchange(true, false);
                         }
 
+                        if(colDownRequests.size() == 1) {
+                            if(tempRequests.get(0).buffer != null){
+
+                            }
+                            byte[][] sendRandom = allPartitions.get(tempRequests.get(0).fileName);
+                            int randomByte = ThreadLocalRandom.current().nextInt(0, sendRandom.length);
+                            //peer send the only partition to a requested peer
+                            sendPartition(sendRandom[randomByte], tempRequests.get(0), Method.COLLABORATIVE_DOWNLOAD, randomByte);
+                        }else{
+
+                        }
                         int possibility = ThreadLocalRandom.current().nextInt(0, 100);
                         //TODO: start all algorithm with pos
                     }
@@ -620,6 +638,36 @@ public class Peer {
             catch(Exception e){
                 throw new RuntimeException(e);
             }
+        }
+    }
+
+    public void sendPartition(byte[] partition, AnyToPeer peer, Method currMethod, int id){
+        Socket socket = null;
+        ObjectOutputStream out = null;
+        ObjectInputStream in = null;
+        try {
+            socket = new Socket(peer.ip, peer.port);
+
+            out = new ObjectOutputStream(socket.getOutputStream());
+            in = new ObjectInputStream(socket.getInputStream());
+
+            AnyToPeer reply = new AnyToPeer();
+            reply.method = currMethod;
+            reply.id = id;
+            reply.buffer = partition;
+            out.writeObject(reply);
+            System.out.println("REPLY: " + reply.toString());
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        try{
+            if (in != null) in.close();
+            if (out != null) out.close();
+            if (socket != null) socket.close();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
