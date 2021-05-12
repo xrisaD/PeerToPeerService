@@ -3,6 +3,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class UtilTest {
 
@@ -51,6 +52,14 @@ public class UtilTest {
 
         assertEquals(3, x.size());
 
+    }
+
+    @org.junit.Test
+    public void getNumbersInRangeTest() {
+        ArrayList<Integer> x = Util.getNumbersInRange(0,4);
+        for (int i = 0; i<x.size(); i++){
+            assertEquals(i, (int)x.get(i));
+        }
     }
 
 }

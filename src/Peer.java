@@ -439,8 +439,8 @@ public class Peer {
         for (String file: this.fileNames) {
             System.out.println(file);
         }
-        HashMap<String, ArrayList<Integer>> pieces = null;
-        HashMap<String, Boolean> seederBit = null;
+        HashMap<String, ArrayList<Integer>> pieces = new HashMap<String, ArrayList<Integer>>();
+        HashMap<String, Boolean> seederBit = new HashMap<String, Boolean>();
         if(this.fileNames.size()>=1) {
             pieces = partition();
             seederBit = createSeederBits();
@@ -458,6 +458,7 @@ public class Peer {
         System.out.println(peerToTracker.toString());
         out.writeObject(peerToTracker);
     }
+
     public HashMap<String, Boolean> createSeederBits(){
         HashMap<String, Boolean> seederBits = new HashMap<String, Boolean>();
         for (int i = 0; i < this.fileNames.size(); i++){
@@ -622,7 +623,7 @@ public class Peer {
             // 2: username, 3: password
             // 4: shared_directory path
             Peer p = new Peer(args[0], parseInt(args[1]), args[2], args[3], args[4]);
-            boolean autoMode =Boolean.parseBoolean(args[5]);
+            boolean autoMode = Boolean.parseBoolean(args[5]);
 
             if(!autoMode) {
                 PeerMainThread peerMainThread = new PeerMainThread(p);
