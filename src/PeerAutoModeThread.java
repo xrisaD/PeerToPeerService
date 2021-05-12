@@ -19,7 +19,7 @@ public class PeerAutoModeThread extends Thread {
         ArrayList<String> forDownload = Util.difference(allFiles, peersFiles); // the files that the peer doesn't have
 
         String file = Util.select(forDownload); // select the next file for download
-        
+
         while(forDownload.size()>0){
 
             ArrayList<Info> peersWithTheFile = p.details(file); // get file's details
@@ -35,7 +35,7 @@ public class PeerAutoModeThread extends Thread {
                     // find 4 peers (using the rules of the requirements)
 
                 }else{
-                    // ask from all of them
+                    // ask all of them
                 }
                 // ALL LOGIC GOES HERE
             }else{
