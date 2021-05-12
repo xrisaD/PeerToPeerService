@@ -15,7 +15,11 @@ public class PeerAutoModeThread extends Thread {
         System.out.println("[PEER] LOGIN " + statusCode + " " + this.p.getIp() + " " + this.p.getPort());
 
         ArrayList<String> allFiles = p.list(); // all system's files
+        //TODO: updatefileToNumberOfPartions
+
         ArrayList<String> peersFiles = p.fileNames; // peer's files
+        //TODO: nonCompletedParts: gemisma me ta onomata olwn twn arxeiwn tou susthmatos
+
         ArrayList<String> forDownload = Util.difference(allFiles, peersFiles); // the files that the peer doesn't have
 
         String file = Util.select(forDownload); // select the next file for download
@@ -23,10 +27,12 @@ public class PeerAutoModeThread extends Thread {
         while(forDownload.size()>0){
 
             ArrayList<Info> peersWithTheFile = p.details(file); // get file's details
+            //TODO: updatefileToNumberOfPartions
 
             // find the number of file's chunks
             // initialize a tmp array with the the chunks we have
 
+            //TOOD: check oti den einai seeder k an einai katallhlo...
             ArrayList<Info> peersWithNeededChunks; // peer with chunks that we don't have
 
             if(peersWithNeededChunks.size()>0){

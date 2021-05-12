@@ -6,10 +6,9 @@ import java.util.HashMap;
 public class AnyToPeer implements Serializable {
     public Method method;
     public StatusCode statusCode;
-    public String ip;
-    public int port;
+    public Info myInfo;
     public int id;
-    byte[] buffer = new byte[4096];
+    byte[] buffer = new byte[4096]; // TODO: change it?
     public int tokenΙd;
     ArrayList<String> allFiles;
     ArrayList<Info> peerInfo;
