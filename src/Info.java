@@ -10,7 +10,7 @@ public class Info implements Serializable {
     // only files which peers are seeders
     public ArrayList<String> sharedDirectory;
     // Pieces of a file
-    public HashMap<String, ArrayList<String>> pieces;
+    public HashMap<String, ArrayList<Integer>> pieces;
     // Files that I am seeder
     public HashMap<String, Boolean> seederBit;
     public int countDownloads;

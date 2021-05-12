@@ -6,6 +6,9 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static java.lang.Integer.parseInt;
 
@@ -25,6 +28,12 @@ public class Peer {
     public String sharedDirectoryPath;
 
     public int partitionSize = 500000; // 0.5 MB
+
+    public AtomicBoolean lockServe = new AtomicBoolean(false);
+    public final List<AnyToPeer> serveRequests = Collections.synchronizedList(new ArrayList<>());
+
+    public AtomicBoolean lockColDown = new AtomicBoolean(false);
+    public final List<AnyToPeer> colDownRequests = Collections.synchronizedList(new ArrayList<>());
 
     // Setters and getters
     public String getIp() {
@@ -563,7 +572,42 @@ public class Peer {
                         out.writeObject(anyToPeer);
                     }
                 }else if(req.method == Method.SEEDER_SERVE){
+                    synchronized (serveRequests){
+                        serveRequests.add(req);
+                    }
+                    // If true, is the first request
+                    if(lockServe.compareAndExchange(false, true)){
+                        try{
+                            Thread.sleep(200);
+                        } catch(InterruptedException e){System.out.println(e); }
 
+                        synchronized (serveRequests) {
+                            ArrayList<AnyToPeer> tempRequests = new ArrayList<>(colDownRequests);
+                            serveRequests.clear();
+                            lockServe.compareAndExchange(true, false);
+                        }
+
+                        int randomPeer = ThreadLocalRandom.current().nextInt(0, serveRequests.size());
+                        //TODO: check if new thread needed
+                    }
+                }else if(req.method == Method.COLLABORATIVE_DOWNLOAD){
+                    synchronized (colDownRequests){
+                        colDownRequests.add(req);
+                    }
+                    if(lockColDown.compareAndExchange(false, true)){
+                        try{
+                            Thread.sleep(200);
+                        } catch(InterruptedException e){System.out.println(e); }
+
+                        synchronized (colDownRequests) {
+                            ArrayList<AnyToPeer> tempRequests = new ArrayList<>(colDownRequests);
+                            colDownRequests.clear();
+                            lockColDown.compareAndExchange(true, false);
+                        }
+
+                        int possibility = ThreadLocalRandom.current().nextInt(0, 100);
+                        //TODO: start all algorithm with pos
+                    }
                 }
             } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
