@@ -647,8 +647,8 @@ public class Peer {
 
                             if(possibility < 20){
                                 int randomPeer = ThreadLocalRandom.current().nextInt(0, tempRequests.size());
-                                Info info = tempRequests.get(0).myInfo;
-                                String fileName = tempRequests.get(0).fileName;
+                                Info info = tempRequests.get(randomPeer).myInfo;
+                                String fileName = tempRequests.get(randomPeer).fileName;
                                 checkIfPeerHasAllPartAndDownload(info, fileName);
 
                             }else if(possibility < 60){
