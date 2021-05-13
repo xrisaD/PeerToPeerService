@@ -56,7 +56,7 @@ public class PeerAutoModeThread extends Thread {
 
     public ArrayList<Info> getSeeders( ArrayList<Info> peersWithTheFile, String filename){
 
-
+        a
         return null;
     }
 
