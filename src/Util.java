@@ -111,6 +111,12 @@ public class Util {
         return differences;
     }
 
+    public static ArrayList<Integer> differencePieces(ArrayList<Integer> all, ArrayList<Integer> sp){
+        ArrayList<Integer> differences = new ArrayList<>(all);
+        differences.removeAll(sp);
+        return differences;
+    }
+
     // select randomly a file
     public static String select(ArrayList<String> files){
         if(files.size()>0) {

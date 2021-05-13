@@ -32,7 +32,6 @@ public class PeerAutoModeThread extends Thread {
 
             // find the number of file's chunks
             // initialize a tmp array with the the chunks we have
-
             //TODO: check oti den einai seeder k an einai katallhlo...
             ArrayList<Info> peersWithNeededChunks = ; // peer with chunks that we don't have
             getNonSeeders();
@@ -55,14 +54,27 @@ public class PeerAutoModeThread extends Thread {
     }
 
     public ArrayList<Info> getSeeders( ArrayList<Info> peersWithTheFile, String filename){
-
-        a
-        return null;
+        ArrayList<Info> infoOnlyForSeeders = new ArrayList<>();
+        for(int i=0; i<peersWithTheFile.size(); i++){
+            if(peersWithTheFile.get(i).seederBit.get(filename)){
+                infoOnlyForSeeders.add(peersWithTheFile.get(i));
+            }
+        }
+        return infoOnlyForSeeders;
     }
 
     public ArrayList<Info> getNonSeeders( ArrayList<Info> peersWithTheFile, String filename, ArrayList<Partition> myParts){
+        ArrayList<Info> infoOnlyForNonSeeders = new ArrayList<>();
+        ArrayList<Integer> partitions = new ArrayList<>();
+        for(int i=0; i<myParts.size(); i++){
+            partitions.add(myParts.get(i).id);
+        }
 
-
-        return null;
+        for(int i=0; i<peersWithTheFile.size(); i++){
+            if((!peersWithTheFile.get(i).seederBit.get(filename)) && Util.differencePieces(peersWithTheFile.get(i).pieces.get(filename), partitions).size()>0);{
+                infoOnlyForNonSeeders.add(peersWithTheFile.get(i));
+            }
+        }
+        return infoOnlyForNonSeeders;
     }
 }

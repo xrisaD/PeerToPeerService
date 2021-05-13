@@ -6,7 +6,6 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -43,7 +42,7 @@ public class Peer {
 
     ConcurrentHashMap<String,Integer> usernameToDownloadedFiles = new ConcurrentHashMap<String,Integer>();
 
-    ConcurrentHashMap<String,Integer> fileToNumberOfPartions = new ConcurrentHashMap<String,Integer>();
+    ConcurrentHashMap<String,Integer> fileToNumberOfPartitions = new ConcurrentHashMap<String,Integer>();
 
     // Setters and getters
     public String getIp() {
@@ -703,8 +702,8 @@ public class Peer {
     private void checkIfPeerHasAllPartAndDownload(Info info, String fileName) {
 
         // if peer doesnt have all the parts
-        if(fileToNumberOfPartions.containsKey(fileName) && nonCompletedParts.containsKey(fileName)
-                && fileToNumberOfPartions.get(fileName) > nonCompletedParts.get(fileName).size()) {
+        if(fileToNumberOfPartitions.containsKey(fileName) && nonCompletedParts.containsKey(fileName)
+                && fileToNumberOfPartitions.get(fileName) > nonCompletedParts.get(fileName).size()) {
             collaborativeDownload(info, fileName, Method.COLLABORATIVE_DOWNLOAD);
         }else{
             collaborativeDownload(info, fileName, Method.COLLABORATIVE_DOWNLOAD_NOT_ANSWER);
