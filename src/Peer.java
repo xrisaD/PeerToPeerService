@@ -765,7 +765,7 @@ public class Peer {
                     nonCompletedParts.get(fileName).add(partition);
                     refreshCounter(req.myInfo.username); // refresh counter for this specific user
                 }else if(req.method == Method.NON_SELECTED){
-                    // TODO
+                    // TODO: enhmerwsh domwn gia autoModeThread
                 }
             } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
