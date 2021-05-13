@@ -135,4 +135,15 @@ public class Util {
         return result;
     }
 
+    public static int[] getTwoDifferentRandomFiles(int start, int end){
+        int[] randomnums = new int[2];
+        int random1 = ThreadLocalRandom.current().nextInt(start, end);
+        randomnums[0] = random1;
+        int random2;
+        do {
+            random2 = ThreadLocalRandom.current().nextInt(start, end);
+        }while (random1!=random2);
+        randomnums[1] = random2;
+        return randomnums;
+    }
 }

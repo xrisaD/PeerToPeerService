@@ -1,6 +1,7 @@
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 // AnytoPeer: messages between peers and tracker to peer
 public class AnyToPeer implements Serializable {
@@ -13,7 +14,10 @@ public class AnyToPeer implements Serializable {
     ArrayList<String> allFiles;
     ArrayList<Info> peerInfo;
     String fileName;
-    // Details reply from tracker
+
+
+    // ALL_PEERS
+    public ConcurrentHashMap<String, Info> usernameToInfo;
 
     @Override
     public String toString() {

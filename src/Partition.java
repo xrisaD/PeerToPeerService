@@ -6,4 +6,8 @@ public class Partition {
         this.data = data;
         this.id = id;
     }
+
+    public Partition(int id) {
+        this.id = id;
+    }
 }
