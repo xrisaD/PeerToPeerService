@@ -539,6 +539,7 @@ public class Peer {
     }
     // thread which handle a request from Peer or Tracker
     public class PeerHandler extends Thread{
+
         Socket socket;
         public PeerHandler(Socket socket){
             this.socket = socket;
@@ -546,6 +547,7 @@ public class Peer {
 
         @Override
         public void run(){ //Protocol
+            //TODO: refactor this method
             ObjectInputStream in = null;
             ObjectOutputStream out = null;
             try{
@@ -645,13 +647,13 @@ public class Peer {
                             }
                             int possibility = ThreadLocalRandom.current().nextInt(0, 100);
 
-                            if(possibility < 20){
+                            if(possibility < 20){ // p=0.2
                                 int randomPeer = ThreadLocalRandom.current().nextInt(0, tempRequests.size());
                                 Info info = tempRequests.get(randomPeer).myInfo;
                                 String fileName = tempRequests.get(randomPeer).fileName;
                                 checkIfPeerHasAllPartAndDownload(info, fileName);
 
-                            }else if(possibility < 60){
+                            }else if(possibility < 60){ // p=0.4
                                 HashMap<Info, String> tmpPeerToFile = new HashMap<Info, String>();
                                 // get all peer's info
                                 ArrayList<Info> peers = new ArrayList<Info>();
@@ -668,13 +670,19 @@ public class Peer {
 
                                     checkIfPeerHasAllPartAndDownload(bestPeer, tmpPeerToFile.get(bestPeer));
                                 }
-                            }else{
+                            }else{ // p=0.4
 
                             }
                         }
 
-                        //TODO: start all algorithm with pos
                     }
+                }else if(req.method == Method.SEEDER_SERVE_SUCCESSFUL || req.method == Method.COLLABORATIVE_DOWNLOAD_NOT_ANSWER){
+                    // just save the sent partition
+                    String fileName = req.fileName;
+                    int id = req.id;
+                    Partition partition = new Partition(req.buffer, id);
+                    nonCompletedParts.get(fileName).add(partition);
+
                 }
             } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
@@ -693,7 +701,8 @@ public class Peer {
     private void checkIfPeerHasAllPartAndDownload(Info info, String fileName) {
 
         // if peer doesnt have all the parts
-        if(fileToNumberOfPartions.containsKey(fileName) && nonCompletedParts.containsKey(fileName) && fileToNumberOfPartions.get(fileName) > nonCompletedParts.get(fileName).size()) {
+        if(fileToNumberOfPartions.containsKey(fileName) && nonCompletedParts.containsKey(fileName)
+                && fileToNumberOfPartions.get(fileName) > nonCompletedParts.get(fileName).size()) {
             collaborativeDownload(info, fileName, Method.COLLABORATIVE_DOWNLOAD);
         }else{
             collaborativeDownload(info, fileName, Method.COLLABORATIVE_DOWNLOAD_NOT_ANSWER);
