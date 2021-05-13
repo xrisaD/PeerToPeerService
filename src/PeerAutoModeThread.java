@@ -27,14 +27,16 @@ public class PeerAutoModeThread extends Thread {
         while(forDownload.size()>0){
 
             ArrayList<Info> peersWithTheFile = p.details(file); // get file's details
+            ArrayList<>
             //TODO: updatefileToNumberOfPartions
 
             // find the number of file's chunks
             // initialize a tmp array with the the chunks we have
 
-            //TOOD: check oti den einai seeder k an einai katallhlo...
-            ArrayList<Info> peersWithNeededChunks; // peer with chunks that we don't have
-
+            //TODO: check oti den einai seeder k an einai katallhlo...
+            ArrayList<Info> peersWithNeededChunks = ; // peer with chunks that we don't have
+            getNonSeeders();
+            getSeeders();
             if(peersWithNeededChunks.size()>0){
                 // while not all -> download
                 if(peersWithNeededChunks.size()>4){
@@ -50,6 +52,17 @@ public class PeerAutoModeThread extends Thread {
 
         }
 
+    }
 
+    public ArrayList<Info> getSeeders( ArrayList<Info> peersWithTheFile, String filename){
+
+
+        return null;
+    }
+
+    public ArrayList<Info> getNonSeeders( ArrayList<Info> peersWithTheFile, String filename, ArrayList<Partition> myParts){
+
+
+        return null;
     }
 }

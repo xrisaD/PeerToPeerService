@@ -116,6 +116,8 @@ public class Tracker {
                         infoTemp.ip = secondInput.ip;
                         infoTemp.port = secondInput.port;
                         infoTemp.sharedDirectory = secondInput.sharedDirectory;
+                        infoTemp.seederBit = secondInput.seederBit;
+                        infoTemp.pieces = secondInput.pieces;
 
                         for (String i : infoTemp.sharedDirectory) {
                             filesToInfo.get(i).put(secondInput.username, infoTemp);
