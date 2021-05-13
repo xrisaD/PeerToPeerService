@@ -711,7 +711,7 @@ public class Peer {
 
                         }else{
                             // save all partitions
-                            saveAllPartions(tempRequests);
+                            saveAllPartitions(tempRequests);
 
                             int possibility = ThreadLocalRandom.current().nextInt(0, 100);
 
@@ -781,7 +781,7 @@ public class Peer {
         }
     }
 
-    private void saveAllPartions(ArrayList<AnyToPeer> tempRequests) {
+    private void saveAllPartitions(ArrayList<AnyToPeer> tempRequests) {
         for (int i=0; i<tempRequests.size(); i++){
             if(tempRequests.get(i).buffer != null){
                 // save partition

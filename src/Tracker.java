@@ -179,6 +179,8 @@ public class Tracker {
                     usernameToInfo.get(req.peerUsername).countDownloads++;
                 } else if(req.method == Method.NOTIFY_FAILED){
                     usernameToInfo.get(req.peerUsername).countFailures++;
+                }else if(req.method == Method.ALL_PEERS){
+                    replyAllPeers(out);
                 }else{
                     System.out.println("Got unexpected request");
                 }
@@ -314,6 +316,14 @@ public class Tracker {
     public void replyDetailsNot(ObjectOutputStream out) throws IOException {
         AnyToPeer reply = new AnyToPeer();
         reply.statusCode = StatusCode.FILE_NOTFOUND;
+        System.out.println("REPLY: "+reply.toString());
+        System.out.println("----");
+        out.writeObject(reply);
+    }
+
+    public void replyAllPeers(ObjectOutputStream out) throws IOException {
+        AnyToPeer reply = new AnyToPeer();
+        reply.usernameToInfo = this.usernameToInfo;
         System.out.println("REPLY: "+reply.toString());
         System.out.println("----");
         out.writeObject(reply);
