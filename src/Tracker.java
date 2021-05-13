@@ -116,6 +116,9 @@ public class Tracker {
                         infoTemp.ip = secondInput.ip;
                         infoTemp.port = secondInput.port;
                         infoTemp.sharedDirectory = secondInput.sharedDirectory;
+                        infoTemp.pieces = secondInput.pieces;
+                        infoTemp.seederBit = secondInput.seederBit;
+
 
                         for (String i : infoTemp.sharedDirectory) {
                             filesToInfo.get(i).put(secondInput.username, infoTemp);
@@ -140,6 +143,7 @@ public class Tracker {
                 } else if (req.method == Method.LIST) {
                     replyList(out);
                 } else if (req.method == Method.DETAILS) {
+                    // get peers with at least one piece of the required file
                     ConcurrentHashMap<String, Info> peersWithFile =  filesToInfo.get(req.fileName);
                     ArrayList<Info> activeFiles = new ArrayList<>();
                     for(Map.Entry<String, Info> i : peersWithFile.entrySet()) {

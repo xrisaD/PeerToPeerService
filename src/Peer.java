@@ -475,6 +475,7 @@ public class Peer {
         out.writeObject(peerToTracker);
     }
 
+    // set true to all bits
     public HashMap<String, Boolean> createSeederBits(){
         HashMap<String, Boolean> seederBits = new HashMap<String, Boolean>();
         for (int i = 0; i < this.fileNames.size(); i++){
@@ -488,6 +489,7 @@ public class Peer {
     public HashMap<String, ArrayList<Integer>> partition(){
         HashMap<String, ArrayList<Integer>> pieces = new HashMap<String, ArrayList<Integer>>();
         for (int i = 0; i < this.fileNames.size(); i++){
+            // load the file and break it into pieces
             byte[] file = Util.loadFile(sharedDirectoryPath, this.fileNames.get(i));
             byte[][] filePartition = Util.divide(file, this.partitionSize);
             allPartitions.put(this.fileNames.get(i), filePartition);
