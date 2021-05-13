@@ -146,18 +146,21 @@ public class Tracker {
                     // get peers with at least one piece of the required file
                     ConcurrentHashMap<String, Info> peersWithFile =  filesToInfo.get(req.fileName);
                     ArrayList<Info> activeFiles = new ArrayList<>();
+                    // check that all peers are active
                     for(Map.Entry<String, Info> i : peersWithFile.entrySet()) {
                         StatusCode status = checkActive(i.getValue().ip, i.getValue().port);
                         if (status != null) {
+                            // if peer is not active delete its entries
                             if (!status.equals(StatusCode.PEER_ISACTIVE)) {
                                 allTokenIds.remove(i.getValue().tokenId);
                                 ArrayList<String> filesOfRemoved = usernameToInfo.get(i.getKey()).sharedDirectory;
-
                                 for (String j : filesOfRemoved) {
                                     filesToInfo.get(j).remove(i.getKey());
                                 }
                                 peersWithFile.remove(i.getKey()); //TODO maybe wrong
-                            } else {
+                            }
+                            // if peer is active add it to the answered peers
+                            else {
                                 activeFiles.add(i.getValue());
                             }
                         }
