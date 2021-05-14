@@ -28,7 +28,8 @@ public class Peer {
 
     public String sharedDirectoryPath;
 
-    public int partitionSize = 500000; // 0.5 MB
+    //public int partitionSize = 500000; // 0.5 MB
+    public int partitionSize = 2;
 
     public AtomicBoolean lockServe = new AtomicBoolean(false);
     public final List<AnyToPeer> serveRequests = Collections.synchronizedList(new ArrayList<>());
@@ -604,8 +605,8 @@ public class Peer {
         HashMap<String, ArrayList<Integer>> pieces = new HashMap<String, ArrayList<Integer>>();
         HashMap<String, Boolean> seederBit = new HashMap<String, Boolean>();
         if(this.fileNames.size()>=1) {
-            pieces = partition();
-            seederBit = createSeederBits();
+            pieces = partition(this.fileNames);
+            seederBit = createSeederBits(this.fileNames);
         }
         PeerToTracker peerToTracker = new PeerToTracker();
         peerToTracker.method = Method.INFORM;
@@ -622,26 +623,25 @@ public class Peer {
     }
 
     // set true to all bits
-    public HashMap<String, Boolean> createSeederBits(){
+    public HashMap<String, Boolean> createSeederBits(ArrayList<String> fileNames){
         HashMap<String, Boolean> seederBits = new HashMap<String, Boolean>();
-        for (int i = 0; i < this.fileNames.size(); i++){
-            seederBits.put(this.fileNames.get(i), true);
+        for (int i = 0; i < fileNames.size(); i++){
+            seederBits.put(fileNames.get(i), true);
         }
         return seederBits;
     }
 
-    // TODO: TESTS
+
     // partition all files
-    public HashMap<String, ArrayList<Integer>> partition(){
+    public HashMap<String, ArrayList<Integer>> partition(ArrayList<String> fileNames){
         HashMap<String, ArrayList<Integer>> pieces = new HashMap<String, ArrayList<Integer>>();
-        for (int i = 0; i < this.fileNames.size(); i++){
+        for (int i = 0; i < fileNames.size(); i++){
             // load the file and break it into pieces
-            //byte[] file = Util.loadFile(sharedDirectoryPath, this.fileNames.get(i));
-            byte[]file = {1,2,3,4,5}; // TODO:DELETE THIS LINE
+            byte[] file = Util.loadFile(sharedDirectoryPath, this.fileNames.get(i));
             byte[][] filePartition = Util.divide(file, this.partitionSize);
-            completedFiles.put(this.fileNames.get(i), filePartition);
-            ArrayList<Integer> parts = Util.getNumbersInRange(1, filePartition.length);
-            pieces.put(this.fileNames.get(i), parts);
+            completedFiles.put(fileNames.get(i), filePartition);
+            ArrayList<Integer> parts = Util.getNumbersInRange(1, filePartition.length + 1);
+            pieces.put(fileNames.get(i), parts);
         }
         return pieces;
     }

@@ -87,6 +87,16 @@ public class UtilTest {
                 actual++;
             }
         }
+    }
+
+    @org.junit.Test
+    public void partitionTest() {
+        int partitionSize = 2;
+        byte[] file = {1,2,3,4,5};
+        byte[][] filePartition = Util.divide(file, partitionSize);
+        assertEquals(3, filePartition.length);
+        ArrayList<Integer> parts = Util.getNumbersInRange(1, filePartition.length + 1);
+        assertEquals(3, parts.size());
 
     }
 
