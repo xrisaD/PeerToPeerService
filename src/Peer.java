@@ -36,13 +36,17 @@ public class Peer {
     public final List<AnyToPeer> colDownRequests = Collections.synchronizedList(new ArrayList<>());
 
     // Seeder's files
-    ConcurrentHashMap<String, byte[][]> allPartitions = new ConcurrentHashMap<String, byte[][]>(); // filename -> array of partitions
+    ConcurrentHashMap<String, byte[][]> completedFiles = new ConcurrentHashMap<String, byte[][]>(); // filename -> array of partitions
 
     // Non Seeder's files
-    ConcurrentHashMap<String , ArrayList<Partition>> nonCompletedParts = new ConcurrentHashMap<>();
+    ConcurrentHashMap<String , ArrayList<Partition>> nonCompletedFiles = new ConcurrentHashMap<>();
 
     ConcurrentHashMap<String,Integer> usernameToDownloadedFiles = new ConcurrentHashMap<String,Integer>();
 
+    // this structure will be updated by the peer's main thread
+    // when peer receives a list from the tracker with all the peers that have the file
+    // we can get this number by getting the number of parts that a seeder has
+    // because a seeder has all the parts of a file
     ConcurrentHashMap<String,Integer> fileToNumberOfPartitions = new ConcurrentHashMap<String,Integer>();
 
     // Setters and getters
@@ -101,7 +105,6 @@ public class Peer {
         String password = scanner.nextLine();
         setUsername(username);
         setPassword(password);
-
     }
 
     // request methods
@@ -283,6 +286,7 @@ public class Peer {
             if (reply.statusCode == StatusCode.SUCCESSFUL_LOGIN) {
                 setToken_id(reply.tokenΙd);
                 inform(out);
+                myInfo = new Info(this.username, this.ip, this.port);
                 return reply.statusCode;
             } else if (reply.statusCode == StatusCode.UNSUCCESSFUL_LOGIN) {
                 return reply.statusCode;
@@ -564,7 +568,7 @@ public class Peer {
             // load the file and break it into pieces
             byte[] file = Util.loadFile(sharedDirectoryPath, this.fileNames.get(i));
             byte[][] filePartition = Util.divide(file, this.partitionSize);
-            allPartitions.put(this.fileNames.get(i), filePartition);
+            completedFiles.put(this.fileNames.get(i), filePartition);
             ArrayList<Integer> parts = Util.getNumbersInRange(1, filePartition.length);
             pieces.put(this.fileNames.get(i), parts);
         }
@@ -632,38 +636,42 @@ public class Peer {
 
                 System.out.println("PEER GOT REQUEST " + req.toString() );
 
-                if(req.method == Method.CHECK_ACTIVE_TRACKER_TO_PEER) {
+                if(req.method == Method.CHECK_ACTIVE_TRACKER_TO_PEER || req.method == Method.CHECK_ACTIVE_PEER_TO_PEER) {
+                    // check if peer is active and answer
                     StatusCode statusCode = isActive();
-                    PeerToTracker peerToTracker = new PeerToTracker();
-                    peerToTracker.statusCode = statusCode;
-                    System.out.println("REPLY: " + peerToTracker.toString());
-                    out.writeObject(peerToTracker);
-                }else if(req.method == Method.CHECK_ACTIVE_PEER_TO_PEER){
-                    StatusCode statusCode = isActive();
-                    AnyToPeer anyToPeer = new AnyToPeer();
-                    anyToPeer.statusCode = statusCode;
-                    System.out.println("REPLY: " + anyToPeer.toString());
-                    out.writeObject(anyToPeer);
+                    replyActive(statusCode, out);
                 }else if(req.method == Method.SIMPLE_DOWNLOAD){
+                    // check if peer has the file
                     if(fileNames.contains(req.fileName)){
+                        // send the file
                         AnyToPeer anyToPeer = new AnyToPeer();
                         anyToPeer.statusCode = StatusCode.FILE_FOUND;
                         anyToPeer.buffer = Util.loadFile(sharedDirectoryPath, req.fileName);
                         out.writeObject(anyToPeer);
                     }else{
+                        // answer that peer doesn't have the file
+                        // maybe the request was wrong
                         AnyToPeer anyToPeer = new AnyToPeer();
                         anyToPeer.statusCode = StatusCode.FILE_NOTFOUND;
                         out.writeObject(anyToPeer);
                     }
                 }else if(req.method == Method.SEEDER_SERVE){
+                    // this is a method that only seeders receive from other peers who are not seeders
+                    // save all requests
                     synchronized (serveRequests){
                         serveRequests.add(req);
                     }
                     // If true, is the first request
                     if(lockServe.compareAndExchange(false, true)){
                         try{
-                            Thread.sleep(200);
-                        } catch(InterruptedException e){System.out.println(e); }
+                            Thread.sleep(200); // the first thread waits for 200msc, in case it receives more requests
+                        } catch(InterruptedException e){
+                            System.out.println(e);
+                        }
+
+                        // after 200msec only the first thread gets all the requests
+                        // saves them and set the parameters and structure at the initial states
+                        // so the process can start again
                         ArrayList<AnyToPeer> tempRequests;
                         synchronized (serveRequests) {
                             tempRequests = new ArrayList<>(colDownRequests);
@@ -671,22 +679,38 @@ public class Peer {
                             lockServe.compareAndExchange(true, false);
                         }
 
+                        // select a random request
                         int randomPeer = ThreadLocalRandom.current().nextInt(0, tempRequests.size());
-
-                        byte[][] sendRandom = allPartitions.get(tempRequests.get(randomPeer).fileName);
-                        int randomByte = ThreadLocalRandom.current().nextInt(0, sendRandom.length);
-                        //peer send random partition to a requested peer
-                        collaborativeDownloadOrSeeederServe(Method.SEEDER_SERVE_SUCCESSFUL, tempRequests.get(randomPeer).fileName, tempRequests.get(randomPeer).myInfo, myInfo, sendRandom[randomByte], randomByte);
+                        AnyToPeer selectedReq = tempRequests.get(randomPeer);
+                        if(completedFiles.containsKey(selectedReq.fileName)){
+                            // get all file's parts
+                            byte[][] sendRandom = completedFiles.get(selectedReq.fileName);
+                            // select a random part
+                            int randomByte = ThreadLocalRandom.current().nextInt(0, sendRandom.length);
+                            // send the partition to the peer
+                            collaborativeDownloadOrSeeederServe(Method.SEEDER_SERVE_SUCCESSFUL, selectedReq.fileName, selectedReq.myInfo, myInfo, sendRandom[randomByte], randomByte);
+                            // remove the selected request and answer to all other requests that they didn't selected
+                            tempRequests.remove(randomPeer);
+                            answerAllWithANegativeResponse(tempRequests);
+                        }
                     }
                 }else if(req.method == Method.COLLABORATIVE_DOWNLOAD){
+                    // this is a method that only non seeders receive from other peers who are not seeders
+
+                    // save all requests
                     synchronized (colDownRequests){
                         colDownRequests.add(req);
                     }
                     if(lockColDown.compareAndExchange(false, true)){
                         try{
                             Thread.sleep(200);
-                        } catch(InterruptedException e){System.out.println(e); }
+                        } catch(InterruptedException e){
+                            System.out.println(e); // the first thread waits for 200msc, in case it receives more requests
+                        }
 
+                        // after 200msec only the first thread gets all the requests
+                        // saves them and set the parameters and structure at the initial states
+                        // so the process can start again
                         ArrayList<AnyToPeer> tempRequests;
                         synchronized (colDownRequests) {
                             tempRequests = new ArrayList<>(colDownRequests);
@@ -694,17 +718,22 @@ public class Peer {
                             lockColDown.compareAndExchange(true, false);
                         }
 
+                        // in case peer received only one request
                         if(tempRequests.size() == 1) {
                             AnyToPeer theRequest = tempRequests.get(0);
+
+                            // peer may received some parts
                             if(theRequest.buffer != null){
-                                // save partition
+                                // save parts
                                 String fileName = theRequest.fileName;
                                 int id = theRequest.id;
                                 Partition partition = new Partition(theRequest.buffer, id);
-                                nonCompletedParts.get(fileName).add(partition);
+                                nonCompletedFiles.get(fileName).add(partition);
+                                // refresh the counter for this peer using its username
                                 refreshCounter(theRequest.myInfo.username);
                             }
 
+                            // answer to the peer
                             Info info = tempRequests.get(0).myInfo;
                             String fileName = tempRequests.get(0).fileName;
                             checkIfPeerHasAllPartAndDownload(info, fileName);
@@ -752,17 +781,15 @@ public class Peer {
 
                             }
                             // answer to all non selected requests
-
                             answerAllWithANegativeResponse(tempRequests);
                         }
-
                     }
                 }else if(req.method == Method.SEEDER_SERVE_SUCCESSFUL || req.method == Method.COLLABORATIVE_DOWNLOAD_NOT_ANSWER){
                     // just save the sent partition
                     String fileName = req.fileName;
                     int id = req.id;
                     Partition partition = new Partition(req.buffer, id);
-                    nonCompletedParts.get(fileName).add(partition);
+                    nonCompletedFiles.get(fileName).add(partition);
                     refreshCounter(req.myInfo.username); // refresh counter for this specific user
                 }else if(req.method == Method.NON_SELECTED){
                     // TODO: enhmerwsh domwn gia autoModeThread
@@ -781,19 +808,26 @@ public class Peer {
         }
     }
 
+    private void replyActive(StatusCode statusCode, ObjectOutputStream out) throws IOException {
+        PeerToTracker peerToTracker = new PeerToTracker();
+        peerToTracker.statusCode = statusCode;
+        System.out.println("REPLY: " + peerToTracker.toString());
+        out.writeObject(peerToTracker);
+    }
+
     private void saveAllPartitions(ArrayList<AnyToPeer> tempRequests) {
         for (int i=0; i<tempRequests.size(); i++){
             if(tempRequests.get(i).buffer != null){
                 // save partition
                 String fileName = tempRequests.get(i).fileName;
                 if(tempRequests.get(i).buffer!=null) {
-                    if(!nonCompletedParts.containsKey(fileName)) {
-                        nonCompletedParts.put(fileName, new ArrayList<Partition>());
+                    if(!nonCompletedFiles.containsKey(fileName)) {
+                        nonCompletedFiles.put(fileName, new ArrayList<Partition>());
                     }
 
                     int id = tempRequests.get(i).id;
                     Partition partition = new Partition(tempRequests.get(i).buffer, id);
-                    nonCompletedParts.get(fileName).add(partition);
+                    nonCompletedFiles.get(fileName).add(partition);
                     refreshCounter(tempRequests.get(i).myInfo.username);
                 }
             }
@@ -845,20 +879,24 @@ public class Peer {
         return null;
     }
 
+    // check if peer has all the parts
+    // we will do the same checking twice (once here and also in the main peer's thread) in order to avoid redundant messages
     private void checkIfPeerHasAllPartAndDownload(Info info, String fileName) {
         // if peer doesnt have all the parts
-        if(fileToNumberOfPartitions.containsKey(fileName) && nonCompletedParts.containsKey(fileName)
-                && fileToNumberOfPartitions.get(fileName) > nonCompletedParts.get(fileName).size()) {
+        if(fileToNumberOfPartitions.containsKey(fileName) && nonCompletedFiles.containsKey(fileName)
+                && fileToNumberOfPartitions.get(fileName) > nonCompletedFiles.get(fileName).size()) {
             collaborativeDownload(info, fileName, Method.COLLABORATIVE_DOWNLOAD);
         }else{
+            // ask for the peer not to send you back a partition, because you have downloaded all the parts
+            // when peer has all parts (is a seeder) the file's info will be moved to allPartitions
             collaborativeDownload(info, fileName, Method.COLLABORATIVE_DOWNLOAD_NOT_ANSWER);
         }
 
     }
 
     public void collaborativeDownload(Info peer, String fileName, Method method){
-        if(nonCompletedParts.containsKey(fileName) && nonCompletedParts.get(fileName).size()>0){ // false if the peer has become a seeder and the request was wrong
-            ArrayList<Partition> partitions = nonCompletedParts.get(fileName);
+        if(nonCompletedFiles.containsKey(fileName) && nonCompletedFiles.get(fileName).size()>0){ // false if the peer has become a seeder and the request was wrong
+            ArrayList<Partition> partitions = nonCompletedFiles.get(fileName);
             int randomPart = ThreadLocalRandom.current().nextInt(0, partitions.size());
             collaborativeDownloadOrSeeederServe(method, fileName, peer, myInfo, partitions.get(randomPart).data, partitions.get(randomPart).id);
         }
@@ -900,6 +938,7 @@ public class Peer {
         this.username = username;
         this.password = password;
         this.sharedDirectoryPath = sharedDirectoryPath;
+
     }
 
     public static void main(String[] args){

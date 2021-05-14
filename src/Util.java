@@ -146,4 +146,8 @@ public class Util {
         randomnums[1] = random2;
         return randomnums;
     }
+
+    public static byte[][] findOrder(ArrayList<Partition>){
+
+    }
 }

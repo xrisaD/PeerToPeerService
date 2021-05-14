@@ -7,8 +7,6 @@ public class PeerAutoModeThread extends Thread {
     }
     @Override
     public void run() {
-        // create myInfo
-        p.myInfo = new Info(p.username, p.getIp(), p.getPort());
 
         System.out.println("Start peer..");
         StatusCode statusCode = this.p.register();
@@ -35,7 +33,7 @@ public class PeerAutoModeThread extends Thread {
             ArrayList<Info> peersWithTheFile = p.details(file); // get file's details
 
 
-            ArrayList<Info> peersWithNeededChunks = getPeersWithNeededChunks(peersWithTheFile, file, p.nonCompletedParts.get(file)); // peer with chunks that we don't have
+            ArrayList<Info> peersWithNeededChunks = getPeersWithNeededChunks(peersWithTheFile, file, p.nonCompletedFiles.get(file)); // peer with chunks that we don't have
             ArrayList<Info> seeders = getSeeders(peersWithNeededChunks, file);// file's seeders
             ArrayList<Info> nonSeeders = getNonSeeders(peersWithNeededChunks, file);
             // find the number of file's chunks
