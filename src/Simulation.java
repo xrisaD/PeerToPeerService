@@ -25,7 +25,7 @@ public class Simulation {
         trackerOutputGobbler.start();
 
         Scanner sc = new Scanner(System.in);
-
+        System.out.println("Press 0 to continue...");
         while(true) {
             String line = sc.nextLine();
             if (line.trim().toLowerCase().equals("0")) {
