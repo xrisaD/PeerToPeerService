@@ -29,130 +29,97 @@ public class PeerAutoModeThread extends Thread {
 
         ArrayList<String> forDownload = Util.difference(allFiles, peersFiles); // the files that the peer doesn't have
 
-        String file = Util.select(forDownload); // select the next file for download
-
         while(forDownload.size()>0){
+            try {
+                sleep(500);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
 
+            String file = Util.select(forDownload); // select the next file for download
+            System.out.println("FILE_NAME: " + file);
             ArrayList<Info> peersWithTheFile = p.details(file); // get file's details
+            if(peersWithTheFile!=null && peersWithTheFile.size()>0){
+                System.out.println("PEERS_WITH THE FILE: " + peersWithTheFile.size());
+                if(!p.nonCompletedFiles.containsKey(file)){
+                    p.nonCompletedFiles.put(file, new ArrayList<>());
+                }
 
+                ArrayList<Info> peersWithNeededParts = getPeersWithNeededChunks(peersWithTheFile, file, p.nonCompletedFiles.get(file)); // peer with chunks that we don't have
+                ArrayList<Info> seeders = getSeeders(peersWithNeededParts, file); // file's seeders
+                ArrayList<Info> nonSeeders = getNonSeeders(peersWithNeededParts, file);
 
-            ArrayList<Info> peersWithNeededParts = getPeersWithNeededChunks(peersWithTheFile, file, p.nonCompletedFiles.get(file)); // peer with chunks that we don't have
-            ArrayList<Info> seeders = getSeeders(peersWithNeededParts, file); // file's seeders
-            ArrayList<Info> nonSeeders = getNonSeeders(peersWithNeededParts, file);
+                // get the number of parts that a file has
+                // a seeder knows all the pieces
+                int numOfParts = 0;
+                if(seeders.size()>0) {
+                    numOfParts = seeders.get(0).pieces.get(file).size();
+                    p.fileToNumberOfPartitions.put(file, numOfParts);
+                }
+                // if peer didn't know about the file
+                // it is the first time that he will ask for a piece
+                if (!p.nonCompletedFiles.containsKey(file)){
+                    p.nonCompletedFiles.put(file, new ArrayList<>());
+                }
 
-            // get the number of parts that a file has
-            // a seeder knows all the pieces
-            int numOfParts = 0;
-            if(seeders.size()>0) {
-                numOfParts = seeders.get(0).pieces.get(file).size();
-                p.fileToNumberOfPartitions.put(file, numOfParts);
-            }
-            // if peer didn't know about the file
-            // it is the first time that he will ask for a piece
-            if (!p.nonCompletedFiles.containsKey(file)){
-                p.nonCompletedFiles.put(file, new ArrayList<>());
-            }
+                // if peer has all the parts
+                if ( numOfParts ==  p.nonCompletedFiles.get(file).size()){
+                    System.out.println("I AM PEER WITH PORT " + p.getPort() + " AND I AM A SEEDER BECAUSE I GOT " + numOfParts + "NUMBER OF PARTS FOR FILE: " + file);
+                    // actions of becoming a seeder of a file:
+                    // 1st: update your structures
+                    // 2nd: inform tracker that now you are a seeder because you have all the parts
+                    // 3rd: don't send any requests of parts of the file
 
-            // if peer has all the parts
-            if ( numOfParts ==  p.nonCompletedFiles.get(file).size()){
-                // actions of becoming a seeder of a file:
-                // 1st: update your structures
-                // 2nd: inform tracker that now you are a seeder because you have all the parts
-                // 3rd: don't send any requests of parts of the file
+                    // 1st:
+                    ArrayList<Partition> parts = p.nonCompletedFiles.get(file);
+                    p.nonCompletedFiles.remove(file);
+                    forDownload.remove(file);
+                    // assemble file and save it to the share directory
+                    byte[][] partsData = Util.findOrder(parts);
+                    Util.saveFile(p.sharedDirectoryPath, file, Util.assemble(partsData));
+                    p.completedFiles.put(file, partsData);
+                    // 2nd:
+                    p.iAmASeeder(file);
+                    // 3rd:
+                    continue;
+                }
 
-                // 1st:
-                ArrayList<Partition> parts = p.nonCompletedFiles.get(file);
-                p.nonCompletedFiles.remove(file);
-                // assemble file and save it to the share directory
-                byte[][] partsData = Util.findOrder(parts);
-                Util.saveFile(p.sharedDirectoryPath, file, Util.assemble(partsData));
-                p.completedFiles.put(file, partsData);
-                // 2nd:
-                p.iAmASeeder(file);
-                // 3rd:
+                // at least one peer has the file we need
+                if(peersWithNeededParts.size()>0){
+                    SendRequestsThread sendRequestsThread = new SendRequestsThread(this.p ,file, peersWithNeededParts, nonSeeders, peersWithTheFile);
+                    sendRequestsThread.start();
+
+                    Thread200 thread200 = new Thread200(p);
+                    thread200.start();
+
+                    while(true){
+                        try {
+                            sleep(1);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        synchronized (p.state){
+                            if(p.state.isAtLeastOneDone()){
+                                if(p.state.done4){
+                                    System.out.println("I AM PEER WITH PORT " + p.getPort() + " AND WILL CONTINUE BECAUSE I GOT 4 REQUESTS!");
+                                }else{
+                                    System.out.println("I AM PEER WITH PORT " + p.getPort() + " AND WILL CONTINUE BECAUSE 200 PASSED!");
+                                }
+                                sendRequestsThread.interrupt();
+                                break;
+                            }
+                        }
+                    }
+                }
+            }else{
+                // no one has the file
                 continue;
             }
-
-
-
         }
+        System.out.println("I AM PEER WITH PORT " + p.getPort() + " AND I DOWNLOADED ALL THE FILES!");
 
     }
 
-    private void firstCase(HashMap<Integer, ArrayList<Info>> peersForSelection, String file, ArrayList<Info> peersWithNeededChunks) {
-        // get best peer or peers
-        Integer max = Collections.max(peersForSelection.keySet());
-        ArrayList<Info> peersWithMax = peersForSelection.get(max);
-
-        // more than two best peers
-        if (peersWithMax.size() > 2) {
-            // select 2 random peers
-            int[] randomPeers = Util.getTwoDifferentRandomPeers(0, peersWithMax.size());
-            ArrayList<Info> twoRandomPeers = new ArrayList<>();
-            for(int i = 0;i < randomPeers.length;i++) {
-                twoRandomPeers.add(peersWithNeededChunks.get(randomPeers[i]));
-            }
-            askForColDownload(twoRandomPeers, file);
-
-        } else if (peersWithMax.size() == 2) {
-            askForColDownload(peersWithMax, file);
-        } else {
-            // send to the best peer
-            askForColDownload(peersWithMax.get(0), file);
-            peersWithMax.remove(max);
-            if (peersWithMax.size()>0) {
-                Integer max2 = Collections.max(peersForSelection.keySet()); // second
-                ArrayList<Info> peersWithMax2 = peersForSelection.get(max2);
-                if (peersWithMax2.size() > 1) {
-                    // select 1 random peers
-                    int random = ThreadLocalRandom.current().nextInt(0, peersWithMax2.size());
-                    askForColDownload(peersWithMax2.get(random), file);
-                } else {
-                    askForColDownload(peersWithMax2.get(0), file);
-                }
-            }
-        }
-
-    }
-
-    // Counter -> peers with this counter
-    private HashMap<Integer, ArrayList<Info>> getPeersCounters(ArrayList<Info> nonSeeders) {
-        HashMap<Integer, ArrayList<Info>> peersForSelection = new HashMap<>();
-        // get the counters
-        for (int i = 0; i < nonSeeders.size(); i++) {
-            if (p.usernameToDownloadedFiles.contains(nonSeeders.get(i).username)) {
-                int counter = p.usernameToDownloadedFiles.get(nonSeeders.get(i).username);
-                if (!peersForSelection.containsKey(counter)) {
-                    peersForSelection.put(counter, new ArrayList<>());
-                }
-                peersForSelection.get(counter).add(nonSeeders.get(i));
-            } else {
-                if (!peersForSelection.containsKey(0)) {
-                    peersForSelection.put(0, new ArrayList<>());
-                }
-                // we haven't received from this peer yet
-                peersForSelection.get(0).add(nonSeeders.get(i));
-            }
-        }
-        return peersForSelection;
-    }
-
-    public void askForColDownload( ArrayList<Info> peersWithTheFile, String file){
-        for (int i=0; i<peersWithTheFile.size(); i++){
-            askForColDownload(peersWithTheFile.get(i), file);
-        }
-    }
-
-    public void askForColDownload(Info peersWithTheFile, String file){
-        Method method;
-        if(peersWithTheFile.seederBit.get(file)){
-            method = Method.SEEDER_SERVE;
-        }else{
-            method = Method.COLLABORATIVE_DOWNLOAD;
-        }
-        p.collaborativeDownloadOrSeeederServe(method, file, peersWithTheFile, p.myInfo, null, -1);
-
-    }
     public ArrayList<Info> getSeeders( ArrayList<Info> peersWithTheFile, String filename){
         ArrayList<Info> infoOnlyForSeeders = new ArrayList<>();
         for(int i=0; i<peersWithTheFile.size(); i++){

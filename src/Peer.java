@@ -8,6 +8,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.Integer.parseInt;
 
@@ -42,6 +43,9 @@ public class Peer {
     ConcurrentHashMap<String , ArrayList<Partition>> nonCompletedFiles = new ConcurrentHashMap<>();
 
     ConcurrentHashMap<String,Integer> usernameToDownloadedFiles = new ConcurrentHashMap<String,Integer>();
+
+    State state = new State();
+
 
     // this structure will be updated by the peer's main thread
     // when peer receives a list from the tracker with all the peers that have the file
@@ -595,7 +599,7 @@ public class Peer {
         // read peer's files
         this.fileNames = Util.readSharedDirectory(sharedDirectoryPath);
         for (String file: this.fileNames) {
-            System.out.println(file);
+            System.out.println("I HAVE THE FILE: "+file);
         }
         HashMap<String, ArrayList<Integer>> pieces = new HashMap<String, ArrayList<Integer>>();
         HashMap<String, Boolean> seederBit = new HashMap<String, Boolean>();
@@ -632,7 +636,8 @@ public class Peer {
         HashMap<String, ArrayList<Integer>> pieces = new HashMap<String, ArrayList<Integer>>();
         for (int i = 0; i < this.fileNames.size(); i++){
             // load the file and break it into pieces
-            byte[] file = Util.loadFile(sharedDirectoryPath, this.fileNames.get(i));
+            //byte[] file = Util.loadFile(sharedDirectoryPath, this.fileNames.get(i));
+            byte[]file = {1,2,3,4,5}; // TODO:DELETE THIS LINE
             byte[][] filePartition = Util.divide(file, this.partitionSize);
             completedFiles.put(this.fileNames.get(i), filePartition);
             ArrayList<Integer> parts = Util.getNumbersInRange(1, filePartition.length);
@@ -740,7 +745,8 @@ public class Peer {
                         // so the process can start again
                         ArrayList<AnyToPeer> tempRequests;
                         synchronized (serveRequests) {
-                            tempRequests = new ArrayList<>(colDownRequests);
+                            System.out.println("NUM OF REQUESTS: "+serveRequests.size());
+                            tempRequests = new ArrayList<>(serveRequests);
                             serveRequests.clear();
                             lockServe.compareAndExchange(true, false);
                         }
@@ -749,8 +755,12 @@ public class Peer {
                         saveAllPartitions(tempRequests);
 
                         // select a random request
-                        int randomPeer = ThreadLocalRandom.current().nextInt(0, tempRequests.size());
-                        AnyToPeer selectedReq = tempRequests.get(randomPeer);
+                        int selectedPeer = 0;
+                        if(tempRequests.size()>1){
+                           selectedPeer = ThreadLocalRandom.current().nextInt(0, tempRequests.size());
+                        }
+
+                        AnyToPeer selectedReq = tempRequests.get(selectedPeer);
                         if(completedFiles.containsKey(selectedReq.fileName)){
                             // get all file's parts
                             byte[][] sendRandom = completedFiles.get(selectedReq.fileName);
@@ -759,7 +769,7 @@ public class Peer {
                             // send the partition to the peer
                             collaborativeDownloadOrSeeederServe(Method.SEEDER_SERVE_SUCCESSFUL, selectedReq.fileName, selectedReq.myInfo, myInfo, sendRandom[randomByte], randomByte);
                             // remove the selected request and answer to all other requests that they didn't selected
-                            tempRequests.remove(randomPeer);
+                            tempRequests.remove(selectedPeer);
                             answerAllWithANegativeResponse(tempRequests);
                         }
                     }
@@ -810,7 +820,7 @@ public class Peer {
                                 checkIfPeerHasAllPartAndDownload(info, fileName);
 
                                 tempRequests.remove(randomPeer); // remove the selected request
-                            }else if(possibility < 60){ // p=0.4
+                            }else if(possibility < 1000){ // p=0.4
 
                                 ConcurrentHashMap<String, Info> allPeers = allPeers(); // ask tracker for information about all peers
                                 HashMap<Info, String> tmpPeerToFile = new HashMap<Info, String>();
@@ -851,7 +861,13 @@ public class Peer {
                     nonCompletedFiles.get(fileName).add(partition);
                     refreshCounter(req.myInfo.username); // refresh counter for this specific user
                 }else if(req.method == Method.NON_SELECTED){
-                    // TODO: enhmerwsh domwn gia autoModeThread
+                    synchronized (state){
+                        state.counter++;
+                        // peer received 4 negative responses
+                        if (state.counter==4){
+                            state.done4 = true; // all the answers was negative
+                        }
+                    }
                 }
             } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
@@ -928,10 +944,10 @@ public class Peer {
             in = new ObjectInputStream(socket.getInputStream());
 
             // send login request to tracker
-            PeerToTracker peerToTracker = new PeerToTracker();
-            peerToTracker.method = Method.NON_SELECTED;
-            System.out.println("REPLY: " + peerToTracker.toString());
-            out.writeObject(peerToTracker);
+            AnyToPeer anyToPeer = new AnyToPeer();
+            anyToPeer.method = Method.NON_SELECTED;
+            System.out.println("REPLY: " + anyToPeer.toString());
+            out.writeObject(anyToPeer);
 
         } catch (IOException e) {
             e.printStackTrace();

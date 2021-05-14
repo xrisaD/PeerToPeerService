@@ -19,7 +19,9 @@ public class Util {
         File[] file = pa.toFile().listFiles();
         if (file != null) {
             for (File p : file) {
-                allfiles.add(p.getName());
+                if (p.isFile()) {
+                    allfiles.add(p.getName());
+                }
             }
         }
         return allfiles;

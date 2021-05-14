@@ -36,7 +36,7 @@ public class ProjectPart2 {
         // we will use testData path in order to create the path for each on the peers
         // format: PATH + peerX\shared_directory\
         ArrayList<String> sharedDirectories = new ArrayList<String>();
-        for (int i = 0 ; i < 10 ; i++){
+        for (int i = 0 ; i < 2 ; i++){
             String path = testDataPath + "peer" + i + "\\shared_directory\\";
             sharedDirectories.add(path);
         }
@@ -48,7 +48,7 @@ public class ProjectPart2 {
         String name = "name";
         String password = "password";
         // Start 10 Peers
-        for (int i = 0 ; i < 10 ; i++){
+        for (int i = 0 ; i < 2 ; i++){
             port++;
             // Start a Peer
             String peerCommand = String.format("java -cp %s Peer %s %d %s %s %s %b" , outPath, ip, port,name+i ,password+i, sharedDirectories.get(i), true);
