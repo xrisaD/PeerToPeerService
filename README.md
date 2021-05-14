@@ -22,7 +22,16 @@ java Tracker IP PORT USER_NAME PASSWORD PATH_OF_SHARED_DIRECTORY AUTO_MODE
 On the other hand, if we set auto-mode to true, the peer will try to download all system's files
 
 ***
+#### File System
+Peer's:
 
+Tracker's:
+
+*** 
+#### Simulation
+
+We simulate a system  
+***
 #### Architecture:
 ![](architecture.PNG)
 
