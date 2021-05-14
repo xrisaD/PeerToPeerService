@@ -11,6 +11,7 @@ public class Simulation {
     // 1: tracker's input with the path of the file
     // 2: testData path
     public static void main(String[] args) throws IOException {
+        int PEERS = 2;
         String outPath = args[0];
         String trackerPath = args[1];
         String testDataPath = args[2];
@@ -36,7 +37,7 @@ public class Simulation {
         // we will use testData path in order to create the path for each on the peers
         // format: PATH + peerX\shared_directory\
         ArrayList<String> sharedDirectories = new ArrayList<String>();
-        for (int i = 0 ; i < 2 ; i++){
+        for (int i = 0 ; i < PEERS ; i++){
             String path = testDataPath + "peer" + i + "\\shared_directory\\";
             sharedDirectories.add(path);
         }
@@ -48,7 +49,7 @@ public class Simulation {
         String name = "name";
         String password = "password";
         // Start 10 Peers
-        for (int i = 0 ; i < 2 ; i++){
+        for (int i = 0 ; i < PEERS ; i++){
             port++;
             // Start a Peer
             String peerCommand = String.format("java -cp %s Peer %s %d %s %s %s %b" , outPath, ip, port,name+i ,password+i, sharedDirectories.get(i), true);
