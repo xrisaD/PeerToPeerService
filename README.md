@@ -21,3 +21,6 @@ java Tracker IP PORT USER_NAME PASSWORD PATH_OF_SHARED_DIRECTORY
 
 #### Architecture:
 ![](architecture.PNG)
+
+****
+This project was developed with Pair Programming technique.
