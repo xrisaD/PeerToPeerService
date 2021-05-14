@@ -136,7 +136,7 @@ public class Util {
         return result;
     }
 
-    public static int[] getTwoDifferentRandomFiles(int start, int end){
+    public static int[] getTwoDifferentRandomPeers(int start, int end){
         int[] randomnums = new int[2];
         int random1 = ThreadLocalRandom.current().nextInt(start, end);
         randomnums[0] = random1;

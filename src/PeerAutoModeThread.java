@@ -1,4 +1,7 @@
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class PeerAutoModeThread extends Thread {
     Peer p;
@@ -33,9 +36,9 @@ public class PeerAutoModeThread extends Thread {
             ArrayList<Info> peersWithTheFile = p.details(file); // get file's details
 
 
-            ArrayList<Info> peersWithNeededChunks = getPeersWithNeededChunks(peersWithTheFile, file, p.nonCompletedFiles.get(file)); // peer with chunks that we don't have
-            ArrayList<Info> seeders = getSeeders(peersWithNeededChunks, file); // file's seeders
-            ArrayList<Info> nonSeeders = getNonSeeders(peersWithNeededChunks, file);
+            ArrayList<Info> peersWithNeededParts = getPeersWithNeededChunks(peersWithTheFile, file, p.nonCompletedFiles.get(file)); // peer with chunks that we don't have
+            ArrayList<Info> seeders = getSeeders(peersWithNeededParts, file); // file's seeders
+            ArrayList<Info> nonSeeders = getNonSeeders(peersWithNeededParts, file);
 
             // get the number of parts that a file has
             // a seeder knows all the pieces
@@ -70,46 +73,85 @@ public class PeerAutoModeThread extends Thread {
                 continue;
             }
 
-            if(peersWithNeededChunks.size()>0){
-                if(peersWithNeededChunks.size()>4){
-                    // find 4 peers (using the rules of the requirements)
-                    // ask 2 nonseeder for collaborativedownload
-                    int[] randomSeeders = Util.getTwoDifferentRandomFiles(0, nonSeeders.size());
-                    for(int i = 0;i < randomSeeders.length;i++) {
-                        p.collaborativeDownloadOrSeeederServe(Method.COLLABORATIVE_DOWNLOAD, file, nonSeeders.get(i), p.myInfo, null, -1);
-                    }
 
-
-                    // ask 2 random peers for collaborativedownload or seeder-serve
-                    int[] randomPeers = Util.getTwoDifferentRandomFiles(0, peersWithNeededChunks.size());
-                    ArrayList<Info> twoRandomPeers = new ArrayList<>();
-                    for(int i = 0;i < randomPeers.length;i++) {
-                        twoRandomPeers.add(peersWithNeededChunks.get(randomPeers[i]));
-                    }
-                    askForColDownload(twoRandomPeers, file);
-
-                }else{
-                    // ask all of them
-                    askForColDownload(peersWithTheFile, file);
-                }
-                // ALL LOGIC GOES HERE
-            }else{
-                continue;
-            }
 
         }
 
     }
+
+    private void firstCase(HashMap<Integer, ArrayList<Info>> peersForSelection, String file, ArrayList<Info> peersWithNeededChunks) {
+        // get best peer or peers
+        Integer max = Collections.max(peersForSelection.keySet());
+        ArrayList<Info> peersWithMax = peersForSelection.get(max);
+
+        // more than two best peers
+        if (peersWithMax.size() > 2) {
+            // select 2 random peers
+            int[] randomPeers = Util.getTwoDifferentRandomPeers(0, peersWithMax.size());
+            ArrayList<Info> twoRandomPeers = new ArrayList<>();
+            for(int i = 0;i < randomPeers.length;i++) {
+                twoRandomPeers.add(peersWithNeededChunks.get(randomPeers[i]));
+            }
+            askForColDownload(twoRandomPeers, file);
+
+        } else if (peersWithMax.size() == 2) {
+            askForColDownload(peersWithMax, file);
+        } else {
+            // send to the best peer
+            askForColDownload(peersWithMax.get(0), file);
+            peersWithMax.remove(max);
+            if (peersWithMax.size()>0) {
+                Integer max2 = Collections.max(peersForSelection.keySet()); // second
+                ArrayList<Info> peersWithMax2 = peersForSelection.get(max2);
+                if (peersWithMax2.size() > 1) {
+                    // select 1 random peers
+                    int random = ThreadLocalRandom.current().nextInt(0, peersWithMax2.size());
+                    askForColDownload(peersWithMax2.get(random), file);
+                } else {
+                    askForColDownload(peersWithMax2.get(0), file);
+                }
+            }
+        }
+
+    }
+
+    // Counter -> peers with this counter
+    private HashMap<Integer, ArrayList<Info>> getPeersCounters(ArrayList<Info> nonSeeders) {
+        HashMap<Integer, ArrayList<Info>> peersForSelection = new HashMap<>();
+        // get the counters
+        for (int i = 0; i < nonSeeders.size(); i++) {
+            if (p.usernameToDownloadedFiles.contains(nonSeeders.get(i).username)) {
+                int counter = p.usernameToDownloadedFiles.get(nonSeeders.get(i).username);
+                if (!peersForSelection.containsKey(counter)) {
+                    peersForSelection.put(counter, new ArrayList<>());
+                }
+                peersForSelection.get(counter).add(nonSeeders.get(i));
+            } else {
+                if (!peersForSelection.containsKey(0)) {
+                    peersForSelection.put(0, new ArrayList<>());
+                }
+                // we haven't received from this peer yet
+                peersForSelection.get(0).add(nonSeeders.get(i));
+            }
+        }
+        return peersForSelection;
+    }
+
     public void askForColDownload( ArrayList<Info> peersWithTheFile, String file){
         for (int i=0; i<peersWithTheFile.size(); i++){
-            Method method;
-            if(peersWithTheFile.get(i).seederBit.get(file)){
-                method = Method.SEEDER_SERVE;
-            }else{
-                method = Method.COLLABORATIVE_DOWNLOAD;
-            }
-            p.collaborativeDownloadOrSeeederServe(method, file, peersWithTheFile.get(i), p.myInfo, null, -1);
+            askForColDownload(peersWithTheFile.get(i), file);
         }
+    }
+
+    public void askForColDownload(Info peersWithTheFile, String file){
+        Method method;
+        if(peersWithTheFile.seederBit.get(file)){
+            method = Method.SEEDER_SERVE;
+        }else{
+            method = Method.COLLABORATIVE_DOWNLOAD;
+        }
+        p.collaborativeDownloadOrSeeederServe(method, file, peersWithTheFile, p.myInfo, null, -1);
+
     }
     public ArrayList<Info> getSeeders( ArrayList<Info> peersWithTheFile, String filename){
         ArrayList<Info> infoOnlyForSeeders = new ArrayList<>();
