@@ -62,4 +62,32 @@ public class UtilTest {
         }
     }
 
+    @org.junit.Test
+    public void findOrderTest() {
+        ArrayList<Partition> x = new ArrayList<>();
+        byte[] bytes1 = {1,2};
+        byte[] bytes2 = {3,4};
+        byte[] bytes3 = {5,6};
+        x.add(new Partition(bytes2, 2));
+        x.add(new Partition(bytes3, 3));
+        x.add(new Partition(bytes1, 1));
+
+        byte[][] res = Util.findOrder(x);
+        assertEquals(3, res.length);
+        assertEquals(2, res[0].length);
+        assertEquals(2, res[1].length);
+        assertEquals(2, res[2].length);
+
+        assertEquals(1,res[0][0]);
+
+        int actual = 1;
+        for (int p = 0; p < res.length; p++){
+            for (int i = 0; i < res[p].length; i++){
+                assertEquals(actual, res[p][i]);
+                actual++;
+            }
+        }
+
+    }
+
 }

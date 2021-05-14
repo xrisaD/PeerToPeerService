@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.ThreadLocalRandom;
@@ -147,7 +148,12 @@ public class Util {
         return randomnums;
     }
 
-    public static byte[][] findOrder(ArrayList<Partition>){
-
+    public static byte[][] findOrder(ArrayList<Partition> parts){
+        byte[][] result = new byte[parts.size()][];
+        Collections.sort(parts);
+        for (int i=0; i<parts.size(); i++){
+            result[i] = parts.get(i).data;
+        }
+        return result;
     }
 }
