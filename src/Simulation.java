@@ -4,7 +4,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Scanner;
 
-public class ProjectPart2 {
+public class Simulation {
 
     // Arguments:
     // 0: outPath: path that the class files are places

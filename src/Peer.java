@@ -1030,6 +1030,7 @@ public class Peer {
             // 0: ip, 1: port
             // 2: username, 3: password
             // 4: shared_directory path
+            // 5: autoMode: boolean
             Peer p = new Peer(args[0], parseInt(args[1]), args[2], args[3], args[4]);
             boolean autoMode = Boolean.parseBoolean(args[5]);
 
