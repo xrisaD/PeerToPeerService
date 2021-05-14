@@ -173,7 +173,7 @@ public class Util {
         for (int i = 0; i < files.size(); i++) {
             String fileName = files.get(i);
             if(fileName.startsWith(fileStart)) {
-                deleteFile(filePath, files.get(i));
+                deleteFile(filePath, fileName);
             }
         }
     }

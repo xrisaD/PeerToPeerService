@@ -34,14 +34,41 @@ public class PeerAutoModeThread extends Thread {
 
 
             ArrayList<Info> peersWithNeededChunks = getPeersWithNeededChunks(peersWithTheFile, file, p.nonCompletedFiles.get(file)); // peer with chunks that we don't have
-            ArrayList<Info> seeders = getSeeders(peersWithNeededChunks, file);// file's seeders
+            ArrayList<Info> seeders = getSeeders(peersWithNeededChunks, file); // file's seeders
             ArrayList<Info> nonSeeders = getNonSeeders(peersWithNeededChunks, file);
-            // find the number of file's chunks
-            //TODO: updatefileToNumberOfPartions
-            // initialize a tmp array with the the chunks we have
 
-            //TOOD: check oti den einai seeder k an einai katallhlo...
+            // get the number of parts that a file has
+            // a seeder knows all the pieces
+            int numOfParts = 0;
+            if(seeders.size()>0) {
+                numOfParts = seeders.get(0).pieces.get(file).size();
+                p.fileToNumberOfPartitions.put(file, numOfParts);
+            }
+            // if peer didn't know about the file
+            // it is the first time that he will ask for a piece
+            if (!p.nonCompletedFiles.containsKey(file)){
+                p.nonCompletedFiles.put(file, new ArrayList<>());
+            }
 
+            // if peer has all the parts
+            if ( numOfParts ==  p.nonCompletedFiles.get(file).size()){
+                // actions of becoming a seeder of a file:
+                // 1st: update your structures
+                // 2nd: inform tracker that now you are a seeder because you have all the parts
+                // 3rd: don't send any requests of parts of the file
+
+                // 1st:
+                ArrayList<Partition> parts = p.nonCompletedFiles.get(file);
+                p.nonCompletedFiles.remove(file);
+                // assemble file and save it to the share directory
+                byte[][] partsData = Util.findOrder(parts);
+                Util.saveFile(p.sharedDirectoryPath, file, Util.assemble(partsData));
+                p.completedFiles.put(file, partsData);
+                // 2nd:
+                p.iAmASeeder(file);
+                // 3rd:
+                continue;
+            }
 
             if(peersWithNeededChunks.size()>0){
                 if(peersWithNeededChunks.size()>4){
@@ -51,6 +78,8 @@ public class PeerAutoModeThread extends Thread {
                     for(int i = 0;i < randomSeeders.length;i++) {
                         p.collaborativeDownloadOrSeeederServe(Method.COLLABORATIVE_DOWNLOAD, file, nonSeeders.get(i), p.myInfo, null, -1);
                     }
+
+
                     // ask 2 random peers for collaborativedownload or seeder-serve
                     int[] randomPeers = Util.getTwoDifferentRandomFiles(0, peersWithNeededChunks.size());
                     ArrayList<Info> twoRandomPeers = new ArrayList<>();
@@ -58,6 +87,7 @@ public class PeerAutoModeThread extends Thread {
                         twoRandomPeers.add(peersWithNeededChunks.get(randomPeers[i]));
                     }
                     askForColDownload(twoRandomPeers, file);
+
                 }else{
                     // ask all of them
                     askForColDownload(peersWithTheFile, file);

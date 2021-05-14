@@ -27,6 +27,9 @@ class PeerToTracker implements Serializable{
     // notify
     public String peerUsername;
 
+    // notify part
+    public int id;
+
     @Override
     public String toString() {
         return "PeerToTracker{" +

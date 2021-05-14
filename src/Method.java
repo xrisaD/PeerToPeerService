@@ -15,5 +15,7 @@ public enum Method {
     SEEDER_SERVE_SUCCESSFUL,
     COLLABORATIVE_DOWNLOAD_NOT_ANSWER, // this will be sent by a peer to another peer in order to inform him that he doesnt need a partition (he has them all)
     NON_SELECTED,
-    ALL_PEERS
+    ALL_PEERS,
+    NOTIFY_SUCCESSFUL_PART,
+    I_AM_SEEDER
 }

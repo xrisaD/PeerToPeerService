@@ -47,7 +47,7 @@ public class Peer {
     // when peer receives a list from the tracker with all the peers that have the file
     // we can get this number by getting the number of parts that a seeder has
     // because a seeder has all the parts of a file
-    ConcurrentHashMap<String,Integer> fileToNumberOfPartitions = new ConcurrentHashMap<String,Integer>();
+    public ConcurrentHashMap<String,Integer> fileToNumberOfPartitions = new ConcurrentHashMap<String,Integer>();
 
     // Setters and getters
     public String getIp() {
@@ -293,6 +293,73 @@ public class Peer {
             }
 
         } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        try{
+            if (in != null) in.close();
+            if (out != null) out.close();
+            if (socket != null) socket.close();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return null;
+    }
+
+    // inform tracker that you are a seeder
+    public StatusCode iAmASeeder(String fileName){
+        Socket socket = null;
+        ObjectOutputStream out = null;
+        ObjectInputStream in = null;
+        try {
+            socket = new Socket(trackerIp, trackerPort);
+            System.out.println("PEER Connected to Tracker on port "+trackerIp+" port "+trackerPort);
+
+            out = new ObjectOutputStream(socket.getOutputStream());
+            in = new ObjectInputStream(socket.getInputStream());
+
+            PeerToTracker peerToTracker = new PeerToTracker();
+            peerToTracker.method = Method.I_AM_SEEDER;
+            peerToTracker.username = this.username;
+            peerToTracker.fileName = fileName;
+            System.out.println("REPLY: " + peerToTracker.toString());
+            out.writeObject(peerToTracker);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        try{
+            if (in != null) in.close();
+            if (out != null) out.close();
+            if (socket != null) socket.close();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return null;
+    }
+
+    // inform tracker that you are a seeder
+    public StatusCode notifySuccessfulPart(String fileName, int id,String peerUsername){
+        Socket socket = null;
+        ObjectOutputStream out = null;
+        ObjectInputStream in = null;
+        try {
+            socket = new Socket(trackerIp, trackerPort);
+            System.out.println("PEER Connected to Tracker on port "+trackerIp+" port "+trackerPort);
+
+            out = new ObjectOutputStream(socket.getOutputStream());
+            in = new ObjectInputStream(socket.getInputStream());
+
+            PeerToTracker peerToTracker = new PeerToTracker();
+            peerToTracker.method = Method.NOTIFY_SUCCESSFUL_PART;
+
+            peerToTracker.fileName = fileName;
+            peerToTracker.id = id;
+            peerToTracker.peerUsername = peerUsername;
+
+            System.out.println("REPLY: " + peerToTracker.toString());
+            out.writeObject(peerToTracker);
+
+        } catch (IOException e) {
             e.printStackTrace();
         }
         try{
@@ -678,6 +745,9 @@ public class Peer {
                             lockServe.compareAndExchange(true, false);
                         }
 
+                        // save all partitions
+                        saveAllPartitions(tempRequests);
+
                         // select a random request
                         int randomPeer = ThreadLocalRandom.current().nextInt(0, tempRequests.size());
                         AnyToPeer selectedReq = tempRequests.get(randomPeer);
@@ -719,18 +789,8 @@ public class Peer {
 
                         // in case peer received only one request
                         if(tempRequests.size() == 1) {
-                            AnyToPeer theRequest = tempRequests.get(0);
-
-                            // peer may received some parts
-                            if(theRequest.buffer != null){
-                                // save parts
-                                String fileName = theRequest.fileName;
-                                int id = theRequest.id;
-                                Partition partition = new Partition(theRequest.buffer, id);
-                                nonCompletedFiles.get(fileName).add(partition);
-                                // refresh the counter for this peer using its username
-                                refreshCounter(theRequest.myInfo.username);
-                            }
+                            // save partition
+                            saveAllPartitions(tempRequests);
 
                             // answer to the peer
                             Info info = tempRequests.get(0).myInfo;
@@ -819,14 +879,22 @@ public class Peer {
             if(tempRequests.get(i).buffer != null){
                 // save partition
                 String fileName = tempRequests.get(i).fileName;
-                if(tempRequests.get(i).buffer!=null) {
-                    if(!nonCompletedFiles.containsKey(fileName)) {
-                        nonCompletedFiles.put(fileName, new ArrayList<Partition>());
-                    }
+                if(!nonCompletedFiles.containsKey(fileName)) {
+                    nonCompletedFiles.put(fileName, new ArrayList<Partition>());
+                }
 
-                    int id = tempRequests.get(i).id;
+                int id = tempRequests.get(i).id;
+                boolean found = false;
+                // check that we dont have the specific part
+                ArrayList<Partition> allParts = nonCompletedFiles.get(fileName);
+                for (int j=0; j < allParts.size(); j++){
+                    if(allParts.get(j).id == id){
+                        found = true;
+                    }
+                }
+                if(!found) {
                     Partition partition = new Partition(tempRequests.get(i).buffer, id);
-                    nonCompletedFiles.get(fileName).add(partition);
+                    allParts.add(partition);
                     refreshCounter(tempRequests.get(i).myInfo.username);
                 }
             }
@@ -838,7 +906,7 @@ public class Peer {
         if(usernameToDownloadedFiles.containsKey(username)){
             usernameToDownloadedFiles.put(username, usernameToDownloadedFiles.get(username) + 1);
         }else{
-            usernameToDownloadedFiles.put(username, 0);
+            usernameToDownloadedFiles.put(username, 1);
         }
     }
 

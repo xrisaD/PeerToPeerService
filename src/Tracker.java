@@ -184,6 +184,25 @@ public class Tracker {
                     usernameToInfo.get(req.peerUsername).countFailures++;
                 }else if(req.method == Method.ALL_PEERS){
                     replyAllPeers(out);
+                }else if(req.method == Method.NOTIFY_SUCCESSFUL_PART){
+                    // Update Files_toInfo data structure, essentially we add peer's info to the array of the peers that have the specific file
+                    Info infoTemp = usernameToInfo.get(req.username);
+
+                    // first time that this peer get a part for this file
+                    if(!infoTemp.sharedDirectory.contains(req.fileName)){
+                        filesToInfo.get(req.fileName).put(req.username, infoTemp);
+                        infoTemp.sharedDirectory.add(req.fileName);
+                        infoTemp.pieces.put(req.fileName, new ArrayList<>());
+                    }
+                    if(!infoTemp.pieces.get(req.fileName).contains(req.id)) {
+                        infoTemp.pieces.get(req.fileName).add(req.id);
+                    }
+                    // Moreover, increase count downloads index.
+                    usernameToInfo.get(req.peerUsername).countDownloads++;
+                }else if(req.method == Method.I_AM_SEEDER){
+                    // change peer's seeder bit
+                    Info infoTemp = usernameToInfo.get(req.username);
+                    infoTemp.seederBit.replace(req.fileName, true);
                 }else{
                     System.out.println("Got unexpected request");
                 }
