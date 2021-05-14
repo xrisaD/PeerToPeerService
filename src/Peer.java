@@ -497,7 +497,6 @@ public class Peer {
 
             // send request to Peer
             AnyToPeer anyToPeer = new AnyToPeer();
-
             anyToPeer.method = Method.SIMPLE_DOWNLOAD;
             anyToPeer.fileName = fileName;
 

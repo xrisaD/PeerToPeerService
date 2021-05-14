@@ -156,4 +156,28 @@ public class Util {
         }
         return result;
     }
+
+    // delete a file
+    public static void deleteFile(String filePath, String fileName){
+        File myObj = new File(filePath + "/" + fileName);
+        if (myObj.delete()) {
+            System.out.println("Deleted the file: " + myObj.getName());
+        } else {
+            System.out.println("Failed to delete the file.");
+        }
+    }
+
+    // delete all files which starts from a specific string
+    // these files are part of a file
+    public static void deleteFiles(ArrayList<String> files, String fileStart, String filePath){
+        for (int i = 0; i < files.size(); i++) {
+            String fileName = files.get(i);
+            if(fileName.startsWith(fileStart)) {
+                deleteFile(filePath, files.get(i));
+            }
+        }
+    }
+
+
+
 }
