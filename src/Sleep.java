@@ -1,9 +1,9 @@
 
 // a thread that sleeps for 200secs and when it wakes up it sets don200 to true
-public class Thread200 extends Thread{
+public class Sleep extends Thread{
 
     Peer p;
-    Thread200(Peer p){
+    Sleep(Peer p){
         this.p = p;
     }
     @Override

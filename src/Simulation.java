@@ -38,7 +38,7 @@ public class Simulation {
         // format: PATH + peerX\shared_directory\
         ArrayList<String> sharedDirectories = new ArrayList<String>();
         for (int i = 0 ; i < PEERS ; i++){
-            String path = testDataPath + "peer" + i + "\\shared_directory\\";
+            String path = testDataPath + "peer" + i + "/shared_directory/";
             sharedDirectories.add(path);
         }
 

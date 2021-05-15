@@ -8,7 +8,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.Integer.parseInt;
 
@@ -26,7 +25,9 @@ public class Peer {
 
     public ArrayList<String> fileNames;
 
+    // paths
     public String sharedDirectoryPath;
+    public String tmpPath;
 
     public int partitionSize = 500000; // 0.5 MB
     //public int partitionSize = 100;
@@ -598,7 +599,7 @@ public class Peer {
     // inform tracker about the files the peer has in the shared directory
     public void inform(ObjectOutputStream out) throws IOException {
         // read peer's files
-        this.fileNames = Util.readSharedDirectory(sharedDirectoryPath);
+        this.fileNames = Util.readDirectory(sharedDirectoryPath);
         for (String file: this.fileNames) {
             System.out.println("I HAVE THE FILE: "+file);
         }
@@ -841,11 +842,7 @@ public class Peer {
                     }
                 }else if(req.method == Method.SEEDER_SERVE_SUCCESSFUL || req.method == Method.COLLABORATIVE_DOWNLOAD_NOT_ANSWER){
                     // just save the sent partition
-                    String fileName = req.fileName;
-                    int id = req.id;
-                    Partition partition = new Partition(req.buffer, id);
-                    nonCompletedFiles.get(fileName).add(partition);
-                    refreshCounter(req.myInfo.username); // refresh counter for this specific user
+                    savePartition(req);
                 }else if(req.method == Method.NON_SELECTED){
                     synchronized (state){
                         state.counter++;
@@ -907,32 +904,37 @@ public class Peer {
     private void saveAllPartitions(ArrayList<AnyToPeer> tempRequests) {
         for (int i=0; i<tempRequests.size(); i++){
             if(tempRequests.get(i).buffer != null){
-                // save partition
-                String fileName = tempRequests.get(i).fileName;
-                if(!nonCompletedFiles.containsKey(fileName)) {
-                    nonCompletedFiles.put(fileName, new ArrayList<Partition>());
-                }
-
-                int id = tempRequests.get(i).id;
-                boolean found = false;
-                // check that we dont have the specific part
-                ArrayList<Partition> allParts = nonCompletedFiles.get(fileName);
-                for (int j=0; j < allParts.size(); j++){
-                    if(allParts.get(j).id == id){
-                        found = true;
-                    }
-                }
-                if(!found) {
-                    Partition partition = new Partition(tempRequests.get(i).buffer, id);
-                    allParts.add(partition);
-                    refreshCounter(tempRequests.get(i).myInfo.username);
-                }
+                savePartition(tempRequests.get(i));
             }
         }
     }
+    public void savePartition(AnyToPeer anyToPeer){
+        // save partition
+        String fileName = anyToPeer.fileName;
+        if(!nonCompletedFiles.containsKey(fileName)) {
+            nonCompletedFiles.put(fileName, new ArrayList<Partition>());
+        }
+        int id = anyToPeer.id;
+        boolean found = false;
+        // check that we dont have the specific part
+        ArrayList<Partition> allParts = nonCompletedFiles.get(fileName);
+        for (int j=0; j < allParts.size(); j++){
+            if(allParts.get(j).id == id){
+                found = true;
+            }
+        }
+        if(!found) {
+            // save part
+            Partition partition = new Partition(anyToPeer.buffer, id);
+            String tmpFileName = fileName.substring(0, fileName.indexOf(".txt")) + "-" + id + ".txt";
+            Util.saveFile(tmpPath, tmpFileName, partition.data);
+            allParts.add(partition);
+            updateCounter(anyToPeer.myInfo.username);
+        }
+    }
 
-    private void refreshCounter(String username) {
-        // refresh the counter for this username
+    // refresh the counter for this username
+    private void updateCounter(String username) {
         if(usernameToDownloadedFiles.containsKey(username)){
             usernameToDownloadedFiles.put(username, usernameToDownloadedFiles.get(username) + 1);
         }else{
@@ -1035,6 +1037,7 @@ public class Peer {
         this.username = username;
         this.password = password;
         this.sharedDirectoryPath = sharedDirectoryPath;
+        this.tmpPath = sharedDirectoryPath + "tmp";
 
     }
 

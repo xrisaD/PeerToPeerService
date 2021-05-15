@@ -13,7 +13,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public class Util {
 
     // read all files' names in a specific directory
-    public static ArrayList<String> readSharedDirectory(String path){
+    public static ArrayList<String> readDirectory(String path){
         ArrayList<String> allfiles = new ArrayList<String>();
         Path pa = Paths.get(path);
         File[] file = pa.toFile().listFiles();
@@ -60,7 +60,7 @@ public class Util {
     // save a given array of bytes in a specific path
     public static void saveFile(String path, String name, byte[] bytes){
         // bytes[] to file
-        Path pathFile = Paths.get(path+name);
+        Path pathFile = Paths.get(path+'/'+name);
         try {
             Files.write(pathFile, bytes);
         } catch (IOException e) {
@@ -162,18 +162,17 @@ public class Util {
     // delete a file
     public static void deleteFile(String filePath, String fileName){
         File myObj = new File(filePath + "/" + fileName);
-        if (myObj.delete()) {
-            System.out.println("Deleted the file: " + myObj.getName());
-        } else {
-            System.out.println("Failed to delete the file.");
-        }
+        System.out.println(myObj.getAbsolutePath());
+        myObj.delete();
     }
 
     // delete all files which starts from a specific string
     // these files are part of a file
-    public static void deleteFiles(ArrayList<String> files, String fileStart, String filePath){
+    public static void deleteFiles(ArrayList<String> files, String file, String filePath){
+        String fileStart = file.substring(0, file.indexOf(".txt"));
         for (int i = 0; i < files.size(); i++) {
             String fileName = files.get(i);
+            System.out.println(fileName);
             if(fileName.startsWith(fileStart)) {
                 deleteFile(filePath, fileName);
             }

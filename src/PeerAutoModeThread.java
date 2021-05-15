@@ -1,7 +1,4 @@
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class PeerAutoModeThread extends Thread {
     Peer p;
@@ -64,11 +61,12 @@ public class PeerAutoModeThread extends Thread {
 
                 // if peer has all the parts
                 if ( numOfParts ==  p.nonCompletedFiles.get(file).size()){
-                    System.out.println("I AM PEER WITH PORT " + p.getPort() + " AND I AM A SEEDER BECAUSE I GOT " + numOfParts + "NUMBER OF PARTS FOR FILE: " + file);
+                    System.out.println("I AM PEER WITH PORT " + p.getPort() + " AND I AM A SEEDER BECAUSE I GOT " + numOfParts + " NUMBER OF PARTS FOR FILE: " + file);
                     // actions of becoming a seeder of a file:
                     // 1st: update your structures
                     // 2nd: inform tracker that now you are a seeder because you have all the parts
-                    // 3rd: don't send any requests of parts of the file
+                    // 3rd: delete tmp files
+                    // 4th: don't send any requests of parts of the file
 
                     // 1st:
                     ArrayList<Partition> parts = p.nonCompletedFiles.get(file);
@@ -81,6 +79,9 @@ public class PeerAutoModeThread extends Thread {
                     // 2nd:
                     p.iAmASeeder(file);
                     // 3rd:
+                    ArrayList<String> allTmps = Util.readDirectory(p.tmpPath);
+                    Util.deleteFiles(allTmps, file, p.tmpPath);
+                    // 4th
                     continue;
                 }
 
@@ -89,7 +90,7 @@ public class PeerAutoModeThread extends Thread {
                     SendRequestsThread sendRequestsThread = new SendRequestsThread(this.p ,file, peersWithNeededParts, nonSeeders, peersWithTheFile);
                     sendRequestsThread.start();
 
-                    Thread200 thread200 = new Thread200(p);
+                    Sleep thread200 = new Sleep(p);
                     thread200.start();
 
                     while(true){
