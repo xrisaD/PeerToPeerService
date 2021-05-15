@@ -27,7 +27,7 @@ public class SendRequestsThread extends Thread {
             // First Case:
             // ask 2 nonseeder for collaborativedownload
             if(nonSeeders.size()>0) {
-                HashMap<Integer, ArrayList<Info>> peersForSelection = getPeersCounters(nonSeeders);
+                HashMap<Integer, ArrayList<Info>> peersForSelection = PeersUtils.getPeersCounters(p, nonSeeders);
                 firstCase(peersForSelection, file, peersWithNeededParts);
             }
 
@@ -110,27 +110,6 @@ public class SendRequestsThread extends Thread {
 
     }
 
-    // Counter -> peers with this counter
-    private HashMap<Integer, ArrayList<Info>> getPeersCounters(ArrayList<Info> nonSeeders) {
-        HashMap<Integer, ArrayList<Info>> peersForSelection = new HashMap<>();
-        // get the counters
-        for (int i = 0; i < nonSeeders.size(); i++) {
-            if (p.usernameToDownloadedFiles.contains(nonSeeders.get(i).username)) {
-                int counter = p.usernameToDownloadedFiles.get(nonSeeders.get(i).username);
-                if (!peersForSelection.containsKey(counter)) {
-                    peersForSelection.put(counter, new ArrayList<>());
-                }
-                peersForSelection.get(counter).add(nonSeeders.get(i));
-            } else {
-                if (!peersForSelection.containsKey(0)) {
-                    peersForSelection.put(0, new ArrayList<>());
-                }
-                // we haven't received from this peer yet
-                peersForSelection.get(0).add(nonSeeders.get(i));
-            }
-        }
-        return peersForSelection;
-    }
 
     public boolean askForColDownload( ArrayList<Info> peersWithTheFile, String file){
         for (int i=0; i<peersWithTheFile.size(); i++){

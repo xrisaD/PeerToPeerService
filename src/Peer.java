@@ -28,8 +28,8 @@ public class Peer {
 
     public String sharedDirectoryPath;
 
-    //public int partitionSize = 500000; // 0.5 MB
-    public int partitionSize = 2;
+    public int partitionSize = 500000; // 0.5 MB
+    //public int partitionSize = 100;
 
     public AtomicBoolean lockServe = new AtomicBoolean(false);
     public final List<AnyToPeer> serveRequests = Collections.synchronizedList(new ArrayList<>());
@@ -818,36 +818,22 @@ public class Peer {
                                 Info info = tempRequests.get(randomPeer).myInfo;
                                 String fileName = tempRequests.get(randomPeer).fileName;
                                 checkIfPeerHasAllPartAndDownload(info, fileName);
-
                                 tempRequests.remove(randomPeer); // remove the selected request
-                            }else if(possibility < 1000){ // p=0.4
-
-                                ConcurrentHashMap<String, Info> allPeers = allPeers(); // ask tracker for information about all peers
-                                HashMap<Info, String> tmpPeerToFile = new HashMap<Info, String>();
-                                HashMap<Info, Integer> tmpPeerToRequest = new HashMap<Info, Integer>();
-
-                                // get all peer's info
-                                ArrayList<Info> peers = new ArrayList<Info>();
-                                for (int i=0; i < tempRequests.size(); i++){
-                                    // get only the information about the peers that sent us a request
-                                    peers.add(allPeers.get(tempRequests.get(i)));
-
-                                    // update tmp data structures
-                                    tmpPeerToFile.put(tempRequests.get(i).myInfo, tempRequests.get(i).fileName);
-                                    tmpPeerToRequest.put(tempRequests.get(i).myInfo, i);
-                                }
-
-                                if(peers!=null) {
-                                    // find the best peer and download
-                                    HashMap<Double, Info> scores = computeScores(peers);
-                                    Double max = Collections.max(scores.keySet()); // best peer
-                                    Info bestPeer = scores.get(max);
-
-                                    checkIfPeerHasAllPartAndDownload(bestPeer, tmpPeerToFile.get(bestPeer));
-                                    tempRequests.remove(tmpPeerToRequest.get(bestPeer)); // remove the selected request
-                                }
+                            }else if(possibility < 60){ // p=0.4
+                                int selectedPeer = answer2ndCase(tempRequests);
+                                tempRequests.remove(selectedPeer); // remove the selected request
                             }else{ // p=0.4
-
+                                HashMap<Integer, ArrayList<AnyToPeer>> requests = PeersUtils.getRequestsCounters(Peer.this, tempRequests);
+                                Integer max = Collections.max(requests.keySet());
+                                ArrayList<AnyToPeer> peersWithMax = requests.get(max);
+                                if(peersWithMax.size()==1){
+                                    AnyToPeer bestPeer = peersWithMax.get(0);
+                                    checkIfPeerHasAllPartAndDownload(bestPeer.myInfo, bestPeer.fileName);
+                                    tempRequests.remove(bestPeer); // remove the selected request
+                                }else{
+                                    int selectedPeer = answer2ndCase(peersWithMax);
+                                    tempRequests.remove(selectedPeer); // remove the selected request
+                                }
                             }
                             // answer to all non selected requests
                             answerAllWithANegativeResponse(tempRequests);
@@ -881,6 +867,34 @@ public class Peer {
                 throw new RuntimeException(e);
             }
         }
+    }
+
+    private Integer answer2ndCase(ArrayList<AnyToPeer> tempRequests) {
+        ConcurrentHashMap<String, Info> allPeers = allPeers(); // ask tracker for information about all peers
+        HashMap<Info, String> tmpPeerToFile = new HashMap<Info, String>();
+        HashMap<Info, Integer> tmpPeerToRequest = new HashMap<Info, Integer>();
+
+        // get all peer's info
+        ArrayList<Info> peers = new ArrayList<Info>();
+        for (int i=0; i < tempRequests.size(); i++){
+            // get only the information about the peers that sent us a request
+            peers.add(allPeers.get(tempRequests.get(i)));
+
+            // update tmp data structures
+            tmpPeerToFile.put(tempRequests.get(i).myInfo, tempRequests.get(i).fileName);
+            tmpPeerToRequest.put(tempRequests.get(i).myInfo, i);
+        }
+
+        if(peers!=null) {
+            // find the best peer and download
+            HashMap<Double, Info> scores = computeScores(peers);
+            Double max = Collections.max(scores.keySet()); // best peer
+            Info bestPeer = scores.get(max);
+
+            checkIfPeerHasAllPartAndDownload(bestPeer, tmpPeerToFile.get(bestPeer));
+            return tmpPeerToRequest.get(bestPeer);
+        }
+        return null;
     }
 
     private void replyActive(StatusCode statusCode, ObjectOutputStream out) throws IOException {
