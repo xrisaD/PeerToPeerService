@@ -1,4 +1,6 @@
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
 
 public class PeerAutoModeThread extends Thread {
     Peer p;
@@ -16,14 +18,13 @@ public class PeerAutoModeThread extends Thread {
         System.out.println("[PEER] LOGIN " + statusCode + " " + this.p.getIp() + " " + this.p.getPort());
 
         ArrayList<String> allFiles = p.list(); // all system's files
-        //TODO: updatefileToNumberOfPartions
 
-        ArrayList<String> peersFiles = p.fileNames; // peer's files
+        Enumeration<String> enumeration = p.completedFiles.keys(); // peer's files
 
-
-
-        //TODO: nonCompletedParts: gemisma me ta onomata olwn twn arxeiwn tou susthmatos
-
+        ArrayList<String> peersFiles = Collections.list(enumeration);
+        for (String i: peersFiles){
+            System.out.println("ENUM!!  "+p.username+"     "+i);
+        }
         ArrayList<String> forDownload = Util.difference(allFiles, peersFiles); // the files that the peer doesn't have
 
         while(forDownload.size()>0){
@@ -70,6 +71,10 @@ public class PeerAutoModeThread extends Thread {
 
                     // 1st:
                     ArrayList<Partition> parts = p.nonCompletedFiles.get(file);
+                    for (Partition poo: parts){
+                        System.out.println(poo.id + "      "+poo.data.length);
+
+                    }
                     p.nonCompletedFiles.remove(file);
                     forDownload.remove(file);
                     // assemble file and save it to the share directory

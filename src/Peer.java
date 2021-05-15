@@ -599,6 +599,7 @@ public class Peer {
     // inform tracker about the files the peer has in the shared directory
     public void inform(ObjectOutputStream out) throws IOException {
         // read peer's files
+        // load seeder's files
         this.fileNames = Util.readDirectory(sharedDirectoryPath);
         for (String file: this.fileNames) {
             System.out.println("I HAVE THE FILE: "+file);
@@ -609,6 +610,32 @@ public class Peer {
             pieces = partition(this.fileNames);
             seederBit = createSeederBits(this.fileNames);
         }
+
+        // load parts
+        ArrayList<String> parts = Util.readDirectory(tmpPath);
+
+        for (String file: parts) {
+            String fileName = file.substring(0, file.indexOf("-")) + ".txt";
+            if(!this.fileNames.contains(fileName)) {
+                this.fileNames.add(fileName);
+                pieces.put(fileName, new ArrayList<Integer>());
+                seederBit.put(fileName, false);
+            }
+
+            String tmp = file.substring(file.indexOf("-")+1, file.indexOf(".txt"));
+            System.out.println(tmp);
+            int id = Integer.parseInt(tmp);
+            System.out.println("ID           "+id);
+            if(!pieces.get(fileName).contains(id)) {
+                pieces.get(fileName).add(id);
+                if(!nonCompletedFiles.containsKey(fileName)){
+                    nonCompletedFiles.put(fileName, new ArrayList<>());
+                }
+                byte[] data = Util.loadFile(tmpPath, file);
+                nonCompletedFiles.get(fileName).add(new Partition(data, id));
+            }
+        }
+
         PeerToTracker peerToTracker = new PeerToTracker();
         peerToTracker.method = Method.INFORM;
         peerToTracker.sharedDirectory = this.fileNames;
@@ -708,10 +735,13 @@ public class Peer {
 
                 System.out.println("PEER GOT REQUEST " + req.toString() );
 
-                if(req.method == Method.CHECK_ACTIVE_TRACKER_TO_PEER || req.method == Method.CHECK_ACTIVE_PEER_TO_PEER) {
+                if(req.method == Method.CHECK_ACTIVE_TRACKER_TO_PEER ) {
                     // check if peer is active and answer
                     StatusCode statusCode = isActive();
-                    replyActive(statusCode, out);
+                    replyActiveToTracker(statusCode, out);
+                }else if(req.method == Method.CHECK_ACTIVE_PEER_TO_PEER){
+                    StatusCode statusCode = isActive();
+                    replyActiveToPeer(statusCode, out);
                 }else if(req.method == Method.SIMPLE_DOWNLOAD){
                     // check if peer has the file
                     if(fileNames.contains(req.fileName)){
@@ -867,19 +897,21 @@ public class Peer {
     }
 
     private Integer answer2ndCase(ArrayList<AnyToPeer> tempRequests) {
-        ConcurrentHashMap<String, Info> allPeers = allPeers(); // ask tracker for information about all peers
-        HashMap<Info, String> tmpPeerToFile = new HashMap<Info, String>();
-        HashMap<Info, Integer> tmpPeerToRequest = new HashMap<Info, Integer>();
+        // ask tracker for information about all peers
+        ConcurrentHashMap<String, Info> allPeers = allPeers(); // username -> Info
+
+        HashMap<String, String> tmpPeerToFile = new HashMap<String, String>(); // username -> file
+        HashMap<String, Integer> tmpPeerToRequest = new HashMap<String, Integer>(); // username -> index of request
 
         // get all peer's info
         ArrayList<Info> peers = new ArrayList<Info>();
         for (int i=0; i < tempRequests.size(); i++){
             // get only the information about the peers that sent us a request
-            peers.add(allPeers.get(tempRequests.get(i)));
+            peers.add(allPeers.get(tempRequests.get(i).myInfo.username));
 
             // update tmp data structures
-            tmpPeerToFile.put(tempRequests.get(i).myInfo, tempRequests.get(i).fileName);
-            tmpPeerToRequest.put(tempRequests.get(i).myInfo, i);
+            tmpPeerToFile.put(tempRequests.get(i).myInfo.username, tempRequests.get(i).fileName);
+            tmpPeerToRequest.put(tempRequests.get(i).myInfo.username, i);
         }
 
         if(peers!=null) {
@@ -888,17 +920,23 @@ public class Peer {
             Double max = Collections.max(scores.keySet()); // best peer
             Info bestPeer = scores.get(max);
 
-            checkIfPeerHasAllPartAndDownload(bestPeer, tmpPeerToFile.get(bestPeer));
-            return tmpPeerToRequest.get(bestPeer);
+            checkIfPeerHasAllPartAndDownload(bestPeer, tmpPeerToFile.get(bestPeer.username));
+            return tmpPeerToRequest.get(bestPeer.username);
         }
         return null;
     }
 
-    private void replyActive(StatusCode statusCode, ObjectOutputStream out) throws IOException {
+    private void replyActiveToTracker(StatusCode statusCode, ObjectOutputStream out) throws IOException {
         PeerToTracker peerToTracker = new PeerToTracker();
         peerToTracker.statusCode = statusCode;
         System.out.println("REPLY: " + peerToTracker.toString());
         out.writeObject(peerToTracker);
+    }
+    private void replyActiveToPeer(StatusCode statusCode, ObjectOutputStream out) throws IOException {
+        AnyToPeer anyToPeer = new AnyToPeer();
+        anyToPeer.statusCode = statusCode;
+        System.out.println("REPLY: " + anyToPeer.toString());
+        out.writeObject(anyToPeer);
     }
 
     private void saveAllPartitions(ArrayList<AnyToPeer> tempRequests) {
