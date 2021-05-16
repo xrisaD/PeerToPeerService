@@ -7,14 +7,15 @@ import java.util.Scanner;
 public class Simulation {
 
     // Arguments:
-    // 0: outPath: path that the class files are places
-    // 1: tracker's input with the path of the file
-    // 2: testData path
+    // 0: number of peers
+    // 1: outPath: path that the class files are placed
+    // 2: tracker's input with the path of the file
+    // 3: testData path
     public static void main(String[] args) throws IOException {
-        int PEERS = 2;
-        String outPath = args[0];
-        String trackerPath = args[1];
-        String testDataPath = args[2];
+        int PEERS = Integer.parseInt(args[1]);
+        String outPath = args[1];
+        String trackerPath = args[2];
+        String testDataPath = args[3];
 
         // Start Tracker
         String trackerCommand = String.format("java -cp %s Tracker %s" , outPath, trackerPath);
