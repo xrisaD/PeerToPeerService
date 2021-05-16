@@ -31,7 +31,7 @@ java Simulation NUM_PEERS OUT_PATH PATH_OF_LISTFILE TEST_DATA_PATH
 - NUM_PEERS: the number of peers you want to create
 - OUT_PATH: path that the class files are placed
 - PATH_OF_LISTFILE: Tracker's input path
-- TEST_DATA_PATH: this should be a directory under of which all peer's paths will be placed. Under this directory you should have NUM_PEERS directories with the following name pattern: each one of them should be called "peerX" where X = 0, 1, ..., NUM_PEERS. Under these directories the shared directory should be placed. <br>
+- TEST_DATA_PATH: this should be a directory under of which all peer's paths will be placed. Under this directory you should have NUM_PEERS directories with the following name pattern: each one of them should be called "peerX" where X = 0, 1, ..., NUM_PEERS-1. Under these directories the shared directory should be placed. <br>
 For example, if we have 2 peers: <br>
 ![](tree_example.PNG)   
 
