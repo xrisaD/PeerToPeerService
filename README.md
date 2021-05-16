@@ -17,20 +17,24 @@ java Tracker IP PORT USER_NAME PASSWORD PATH_OF_SHARED_DIRECTORY AUTO_MODE
 - PORT: PEER'S PORT
 - USER_NAME: PEER'S USERNAME
 - PASSWORD: PEER'S PASSWORD
-- PATH_OF_SHARED_DIRECTORY: all files in that directory will be shared 
+- PATH_OF_SHARED_DIRECTORY: all files in this directory will be shared. You should also have a directory under this directory which should be called "tmp". This directory will be used to temporary save the file's parts.
 - AUTO_MODE: {true, false} If we set auto-mode to false, a command line menu will be shown and we will download whatever file we want.
 On the other hand, if we set auto-mode to true, the peer will try to download all system's files
-
-***
-#### File System
-Peer's:
-
-Tracker's:
-
 *** 
 #### Simulation
 
-We simulate a system  
+We simulate a system with 1 tracker and NUM_PEERS peers. At the end, all peers will have saved in their SHARED_DIRECTORY all system's files.
+
+```console
+java Simulation NUM_PEERS OUT_PATH PATH_OF_LISTFILE TEST_DATA_PATH 
+```
+- NUM_PEERS: the number of peers you want to create
+- OUT_PATH: path that the class files are placed
+- PATH_OF_LISTFILE: Tracker's input path
+- TEST_DATA_PATH: this should be a directory under of which all peer's paths will be placed. Under this directory you should have NUM_PEERS directories with the following name pattern: each one of them should be called "peerX" where X = 0, 1, ..., NUM_PEERS. Under these directories the shared directory should be placed. <br>
+For example, if we have 2 peers:
+![](tree_example.PNG)   
+
 ***
 #### Architecture:
 ![](architecture.PNG)
