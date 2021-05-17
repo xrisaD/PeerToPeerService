@@ -1,18 +1,18 @@
-public class Partition implements Comparable<Partition>{
+public class Part implements Comparable<Part>{
     public int id;
     public byte[] data;
 
-    public Partition(byte[] data, int id) {
+    public Part(byte[] data, int id) {
         this.data = data;
         this.id = id;
     }
 
-    public Partition(int id) {
+    public Part(int id) {
         this.id = id;
     }
 
     @Override
-    public int compareTo(Partition o) {
+    public int compareTo(Part o) {
         return  this.id > o.id ? +1 : this.id < o.id ? -1 : 0;
     }
 }

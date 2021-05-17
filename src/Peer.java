@@ -42,7 +42,7 @@ public class Peer {
     ConcurrentHashMap<String, byte[][]> completedFiles = new ConcurrentHashMap<String, byte[][]>(); // filename -> array of partitions
 
     // Non Seeder's files
-    ConcurrentHashMap<String , ArrayList<Partition>> nonCompletedFiles = new ConcurrentHashMap<>();
+    ConcurrentHashMap<String , ArrayList<Part>> nonCompletedFiles = new ConcurrentHashMap<>();
 
     ConcurrentHashMap<String,Integer> usernameToDownloadedFiles = new ConcurrentHashMap<String,Integer>();
 
@@ -632,7 +632,7 @@ public class Peer {
                     nonCompletedFiles.put(fileName, new ArrayList<>());
                 }
                 byte[] data = Util.loadFile(tmpPath, file);
-                nonCompletedFiles.get(fileName).add(new Partition(data, id));
+                nonCompletedFiles.get(fileName).add(new Part(data, id));
             }
         }
 
@@ -950,12 +950,12 @@ public class Peer {
         // save partition
         String fileName = anyToPeer.fileName;
         if(!nonCompletedFiles.containsKey(fileName)) {
-            nonCompletedFiles.put(fileName, new ArrayList<Partition>());
+            nonCompletedFiles.put(fileName, new ArrayList<Part>());
         }
         int id = anyToPeer.id;
         boolean found = false;
         // check that we dont have the specific part
-        ArrayList<Partition> allParts = nonCompletedFiles.get(fileName);
+        ArrayList<Part> allParts = nonCompletedFiles.get(fileName);
         for (int j=0; j < allParts.size(); j++){
             if(allParts.get(j).id == id){
                 found = true;
@@ -963,10 +963,10 @@ public class Peer {
         }
         if(!found) {
             // save part
-            Partition partition = new Partition(anyToPeer.buffer, id);
+            Part part = new Part(anyToPeer.buffer, id);
             String tmpFileName = fileName.substring(0, fileName.indexOf(".txt")) + "-" + id + ".txt";
-            Util.saveFile(tmpPath, tmpFileName, partition.data);
-            allParts.add(partition);
+            Util.saveFile(tmpPath, tmpFileName, part.data);
+            allParts.add(part);
             updateCounter(anyToPeer.myInfo.username);
         }
     }
@@ -1033,9 +1033,9 @@ public class Peer {
 
     public void collaborativeDownload(Info peer, String fileName, Method method){
         if(nonCompletedFiles.containsKey(fileName) && nonCompletedFiles.get(fileName).size()>0){ // false if the peer has become a seeder and the request was wrong
-            ArrayList<Partition> partitions = nonCompletedFiles.get(fileName);
-            int randomPart = ThreadLocalRandom.current().nextInt(0, partitions.size());
-            collaborativeDownloadOrSeeederServe(method, fileName, peer, myInfo, partitions.get(randomPart).data, partitions.get(randomPart).id);
+            ArrayList<Part> parts = nonCompletedFiles.get(fileName);
+            int randomPart = ThreadLocalRandom.current().nextInt(0, parts.size());
+            collaborativeDownloadOrSeeederServe(method, fileName, peer, myInfo, parts.get(randomPart).data, parts.get(randomPart).id);
         }
     }
 

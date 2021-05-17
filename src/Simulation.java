@@ -49,7 +49,7 @@ public class Simulation {
         ArrayList<Process> peers = new ArrayList<>();
         String name = "name";
         String password = "password";
-        // Start 10 Peers
+        // Start Peers
         for (int i = 0 ; i < PEERS ; i++){
             port++;
             // Start a Peer

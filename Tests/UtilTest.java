@@ -1,5 +1,4 @@
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -65,13 +64,13 @@ public class UtilTest {
 
     @org.junit.Test
     public void findOrderTest() {
-        ArrayList<Partition> x = new ArrayList<>();
+        ArrayList<Part> x = new ArrayList<>();
         byte[] bytes1 = {1,2};
         byte[] bytes2 = {3,4};
         byte[] bytes3 = {5,6};
-        x.add(new Partition(bytes2, 2));
-        x.add(new Partition(bytes3, 3));
-        x.add(new Partition(bytes1, 1));
+        x.add(new Part(bytes2, 2));
+        x.add(new Part(bytes3, 3));
+        x.add(new Part(bytes1, 1));
 
         byte[][] res = Util.findOrder(x);
         assertEquals(3, res.length);

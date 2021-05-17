@@ -6,7 +6,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -108,6 +107,7 @@ public class Util {
         return out;
     }
 
+    // find the set difference (A-B) where A is the first input an B is the second one
     public static ArrayList<String> difference(ArrayList<String> all, ArrayList<String> sp){
         ArrayList<String> differences = new ArrayList<>(all);
         differences.removeAll(sp);
@@ -150,7 +150,7 @@ public class Util {
         return randomnums;
     }
 
-    public static byte[][] findOrder(ArrayList<Partition> parts){
+    public static byte[][] findOrder(ArrayList<Part> parts){
         byte[][] result = new byte[parts.size()][];
         Collections.sort(parts);
         for (int i=0; i<parts.size(); i++){

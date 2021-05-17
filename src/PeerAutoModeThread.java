@@ -70,8 +70,8 @@ public class PeerAutoModeThread extends Thread {
                     // 4th: don't send any requests of parts of the file
 
                     // 1st:
-                    ArrayList<Partition> parts = p.nonCompletedFiles.get(file);
-                    for (Partition poo: parts){
+                    ArrayList<Part> parts = p.nonCompletedFiles.get(file);
+                    for (Part poo: parts){
                         System.out.println(poo.id + "      "+poo.data.length);
 
                     }
@@ -146,7 +146,7 @@ public class PeerAutoModeThread extends Thread {
         return infoOnlyForSeeders;
     }
 
-    public ArrayList<Info> getPeersWithNeededChunks( ArrayList<Info> peersWithTheFile, String filename, ArrayList<Partition> myParts){
+    public ArrayList<Info> getPeersWithNeededChunks( ArrayList<Info> peersWithTheFile, String filename, ArrayList<Part> myParts){
         ArrayList<Info> infoOnlyForNonSeeders = new ArrayList<>();
         ArrayList<Integer> partitions = new ArrayList<>();
         for(int i=0; i<myParts.size(); i++){
