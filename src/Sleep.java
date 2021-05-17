@@ -14,7 +14,7 @@ public class Sleep extends Thread{
             e.printStackTrace();
         }
         synchronized (p.state){
-            p.state.done200 = true;
+            p.state.done2 = true;
         }
     }
 }

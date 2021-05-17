@@ -12,7 +12,7 @@ public class Simulation {
     // 2: tracker's input with the path of the file
     // 3: testData path
     public static void main(String[] args) throws IOException {
-        int PEERS = Integer.parseInt(args[1]);
+        int PEERS = Integer.parseInt(args[0]);
         String outPath = args[1];
         String trackerPath = args[2];
         String testDataPath = args[3];

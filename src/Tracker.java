@@ -157,7 +157,7 @@ public class Tracker {
                                 for (String j : filesOfRemoved) {
                                     filesToInfo.get(j).remove(i.getKey());
                                 }
-                                peersWithFile.remove(i.getKey()); //TODO maybe wrong
+                                peersWithFile.remove(i.getKey());
                             }
                             // if peer is active add it to the answered peers
                             else {

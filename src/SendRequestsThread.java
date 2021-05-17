@@ -28,7 +28,10 @@ public class SendRequestsThread extends Thread {
             // ask 2 nonseeder for collaborativedownload
             if(nonSeeders.size()>0) {
                 HashMap<Integer, ArrayList<Info>> peersForSelection = PeersUtils.getPeersCounters(p, nonSeeders);
-                firstCase(peersForSelection, file, peersWithNeededParts);
+                boolean stop = firstCase(peersForSelection, file, peersWithNeededParts);
+                if(stop){
+                    return;
+                }
             }
 
             // Second Case:
@@ -54,7 +57,7 @@ public class SendRequestsThread extends Thread {
         }
 
     }
-    private void firstCase(HashMap<Integer, ArrayList<Info>> peersForSelection, String file, ArrayList<Info> peersWithNeededChunks) {
+    private boolean firstCase(HashMap<Integer, ArrayList<Info>> peersForSelection, String file, ArrayList<Info> peersWithNeededChunks) {
         // get best peer or peers
         Integer max = Collections.max(peersForSelection.keySet());
         ArrayList<Info> peersWithMax = peersForSelection.get(max);
@@ -69,22 +72,19 @@ public class SendRequestsThread extends Thread {
             }
             boolean stop = askForColDownload(twoRandomPeers, file);
             if(stop){
-                System.out.println("THREAD WILL STOP");
-                return;
+                return true;
             }
 
         } else if (peersWithMax.size() == 2) {
             boolean stop = askForColDownload(peersWithMax, file);
             if(stop){
-                System.out.println("THREAD WILL STOP");
-                return;
+                return true;
             }
         } else {
             // send to the best peer
             boolean stop = askForColDownload(peersWithMax.get(0), file);
             if(stop){
-                System.out.println("THREAD WILL STOP");
-                return;
+                return true;
             }
             peersWithMax.remove(max);
             if (peersWithMax.size()>0) {
@@ -95,19 +95,17 @@ public class SendRequestsThread extends Thread {
                     int random = ThreadLocalRandom.current().nextInt(0, peersWithMax2.size());
                     stop = askForColDownload(peersWithMax2.get(random), file);
                     if(stop){
-                        System.out.println("THREAD WILL STOP");
-                        return;
+                        return true;
                     }
                 } else {
                     stop = askForColDownload(peersWithMax2.get(0), file);
                     if(stop){
-                        System.out.println("THREAD WILL STOP");
-                        return;
+                        return true;
                     }
                 }
             }
         }
-
+        return false;
     }
 
 
@@ -115,7 +113,7 @@ public class SendRequestsThread extends Thread {
         for (int i=0; i<peersWithTheFile.size(); i++){
             boolean stop = askForColDownload(peersWithTheFile.get(i), file);
             if(stop){
-                return stop;
+                return true;
             }
         }
         return false;

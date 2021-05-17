@@ -95,8 +95,8 @@ public class PeerAutoModeThread extends Thread {
                     SendRequestsThread sendRequestsThread = new SendRequestsThread(this.p ,file, peersWithNeededParts, nonSeeders, peersWithTheFile);
                     sendRequestsThread.start();
 
-                    Sleep thread200 = new Sleep(p);
-                    thread200.start();
+                    Sleep thread2 = new Sleep(p);
+                    thread2.start();
 
                     while(true){
                         try {
@@ -117,13 +117,9 @@ public class PeerAutoModeThread extends Thread {
                         }
                     }
                 }
-            }else{
-                // no one has the file
-                continue;
             }
         }
         System.out.println("I AM PEER WITH PORT " + p.getPort() + " AND I DOWNLOADED ALL THE FILES!");
-
     }
 
     public ArrayList<Info> getSeeders( ArrayList<Info> peersWithTheFile, String filename){

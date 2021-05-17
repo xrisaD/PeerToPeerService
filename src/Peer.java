@@ -46,7 +46,7 @@ public class Peer {
 
     ConcurrentHashMap<String,Integer> usernameToDownloadedFiles = new ConcurrentHashMap<String,Integer>();
 
-    State state = new State();
+    final State state = new State();
 
 
     // this structure will be updated by the peer's main thread
@@ -761,6 +761,7 @@ public class Peer {
                     // this is a method that only seeders receive from other peers who are not seeders
                     // save all requests
                     synchronized (serveRequests){
+                        System.out.println("MPIKEEEEEEEEEEEEEEEEEEEEEEEEE          "+ ip +"    /   "+ port);
                         serveRequests.add(req);
                     }
                     // If true, is the first request
@@ -776,7 +777,7 @@ public class Peer {
                         // so the process can start again
                         ArrayList<AnyToPeer> tempRequests;
                         synchronized (serveRequests) {
-                            System.out.println("NUM OF REQUESTS: "+serveRequests.size());
+                            System.out.println("NUM OF REQUESTS: "+serveRequests.size()+"  /  "+ ip +"    /   "+ port);
                             tempRequests = new ArrayList<>(serveRequests);
                             serveRequests.clear();
                             lockServe.compareAndExchange(true, false);
