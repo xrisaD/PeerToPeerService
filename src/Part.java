@@ -7,10 +7,6 @@ public class Part implements Comparable<Part>{
         this.id = id;
     }
 
-    public Part(int id) {
-        this.id = id;
-    }
-
     @Override
     public int compareTo(Part o) {
         return  this.id > o.id ? +1 : this.id < o.id ? -1 : 0;

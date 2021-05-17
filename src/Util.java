@@ -109,17 +109,17 @@ public class Util {
     }
 
     // find the set difference (A-B) where A is the first input an B is the second one
-    public static ArrayList<String> difference(ArrayList<String> all, ArrayList<String> sp){
-        ArrayList<String> differences = new ArrayList<>(all);
+    public static <E> ArrayList<E> difference(ArrayList<E> all, ArrayList<E> sp){
+        ArrayList<E> differences = new ArrayList<E>(all);
         differences.removeAll(sp);
         return differences;
     }
 
-    public static ArrayList<Integer> differencePieces(ArrayList<Integer> all, ArrayList<Integer> sp){
-        ArrayList<Integer> differences = new ArrayList<>(all);
-        differences.removeAll(sp);
-        return differences;
-    }
+//    public static ArrayList<Integer> differencePieces(ArrayList<Integer> all, ArrayList<Integer> sp){
+//        ArrayList<Integer> differences = new ArrayList<>(all);
+//        differences.removeAll(sp);
+//        return differences;
+//    }
 
     // select randomly a file
     public static String select(ArrayList<String> files){

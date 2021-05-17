@@ -22,9 +22,7 @@ public class PeerAutoModeThread extends Thread {
         Enumeration<String> enumeration = p.completedFiles.keys(); // peer's files
 
         ArrayList<String> peersFiles = Collections.list(enumeration);
-        for (String i: peersFiles){
-            System.out.println("ENUM!!  "+p.username+"     "+i);
-        }
+
         ArrayList<String> forDownload = Util.difference(allFiles, peersFiles); // the files that the peer doesn't have
 
         while(forDownload.size()>0){
@@ -71,10 +69,7 @@ public class PeerAutoModeThread extends Thread {
 
                     // 1st:
                     ArrayList<Part> parts = p.nonCompletedFiles.get(file);
-                    for (Part poo: parts){
-                        System.out.println(poo.id + "      "+poo.data.length);
 
-                    }
                     p.nonCompletedFiles.remove(file);
                     forDownload.remove(file);
                     // assemble file and save it to the share directory
@@ -150,7 +145,7 @@ public class PeerAutoModeThread extends Thread {
         }
 
         for(int i=0; i<peersWithTheFile.size(); i++){
-            if( Util.differencePieces(peersWithTheFile.get(i).pieces.get(filename), partitions).size()>0);{
+            if( Util.difference(peersWithTheFile.get(i).pieces.get(filename), partitions).size()>0);{
                 infoOnlyForNonSeeders.add(peersWithTheFile.get(i));
             }
         }

@@ -622,9 +622,7 @@ public class Peer {
             }
 
             String tmp = file.substring(file.indexOf("-")+1, file.indexOf(".txt"));
-            System.out.println(tmp);
             int id = Integer.parseInt(tmp);
-            System.out.println("ID           "+id);
             if(!pieces.get(fileName).contains(id)) {
                 pieces.get(fileName).add(id);
                 if(!nonCompletedFiles.containsKey(fileName)){
@@ -761,7 +759,6 @@ public class Peer {
                     // save all requests
                     int size = 0;
                     synchronized (serveRequests){
-                        System.out.println("MPIKEEEEEEEEEEEEEEEEEEEEEEEEE          "+ ip +"    /   "+ port+"     "+req);
                         serveRequests.add(req);
                         size = serveRequests.size();
                     }
@@ -769,7 +766,6 @@ public class Peer {
                     // If true, is the first request
                     if(size == 1){
                         synchronized (serveRequests){
-                            System.out.println("MPIKEEEEEEEEEEEEEEEEEEEEEEEEE          "+ ip +"    /   "+ port+"     "+req);
                             serveRequests.add(req);
                         }
                         try{
@@ -783,7 +779,6 @@ public class Peer {
                         // so the process can start again
                         ArrayList<AnyToPeer> tempRequests;
                         synchronized (serveRequests) {
-                            System.out.println("NUM OF REQUESTS: "+serveRequests.size()+"  /  "+ ip +"    /   "+ port);
                             tempRequests = new ArrayList<>(serveRequests);
                             serveRequests.clear();
                             //lockServe.compareAndExchange(true, false);
@@ -797,9 +792,7 @@ public class Peer {
                         if(tempRequests.size()>1){
                            selectedPeer = ThreadLocalRandom.current().nextInt(0, tempRequests.size());
                         }
-                        if(tempRequests.size()==0){
-                            System.out.println("MHDENNNNNNNN      "+ip +"    /   "+ port);
-                        }
+
                         AnyToPeer selectedReq = tempRequests.get(selectedPeer);
                         if(completedFiles.containsKey(selectedReq.fileName)){
                             // get all file's parts
