@@ -7,7 +7,6 @@ import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static java.lang.Integer.parseInt;
 
@@ -31,10 +30,8 @@ public class Peer {
 
     public int partitionSize = 500000; // 0.5 MB
 
-    //public AtomicBoolean lockServe = new AtomicBoolean(false);
     public final List<AnyToPeer> serveRequests = Collections.synchronizedList(new ArrayList<>());
 
-    //public AtomicBoolean lockColDown = new AtomicBoolean(false);
     public final List<AnyToPeer> colDownRequests = Collections.synchronizedList(new ArrayList<>());
 
     // Seeder's files
@@ -722,7 +719,6 @@ public class Peer {
 
         @Override
         public void run(){ //Protocol
-            //TODO: refactor this method
             ObjectInputStream in = null;
             ObjectOutputStream out = null;
             try{

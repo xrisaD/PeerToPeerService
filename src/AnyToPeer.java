@@ -10,7 +10,7 @@ public class AnyToPeer implements Serializable {
     public StatusCode statusCode;
     public Info myInfo;
     public int id;
-    byte[] buffer = new byte[4096]; // TODO: change it?
+    byte[] buffer = null;
     public int tokenΙd;
     ArrayList<String> allFiles;
     ArrayList<Info> peerInfo;
