@@ -1,5 +1,6 @@
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -24,9 +25,13 @@ public class AnyToPeer implements Serializable {
         return "AnyToPeer{" +
                 "method=" + method +
                 ", statusCode=" + statusCode +
-                ", token_id=" + tokenΙd +
-                ", All_files=" + allFiles +
-                ", Peer_Info=" + peerInfo +
+                ", myInfo=" + myInfo +
+                ", id=" + id +
+                ", tokenΙd=" + tokenΙd +
+                ", allFiles=" + allFiles +
+                ", peerInfo=" + peerInfo +
+                ", fileName='" + fileName + '\'' +
+                ", usernameToInfo=" + usernameToInfo +
                 '}';
     }
 }

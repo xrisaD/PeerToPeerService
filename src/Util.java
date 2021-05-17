@@ -163,7 +163,6 @@ public class Util {
     // delete a file
     public static void deleteFile(String filePath, String fileName){
         File myObj = new File(filePath + "/" + fileName);
-        System.out.println(myObj.getAbsolutePath());
         myObj.delete();
     }
 
@@ -173,7 +172,6 @@ public class Util {
         String fileStart = file.substring(0, file.indexOf(".txt"));
         for (int i = 0; i < files.size(); i++) {
             String fileName = files.get(i);
-            System.out.println(fileName);
             if(fileName.startsWith(fileStart)) {
                 deleteFile(filePath, fileName);
             }

@@ -30,12 +30,11 @@ public class Peer {
     public String tmpPath;
 
     public int partitionSize = 500000; // 0.5 MB
-    //public int partitionSize = 100;
 
-    public AtomicBoolean lockServe = new AtomicBoolean(false);
+    //public AtomicBoolean lockServe = new AtomicBoolean(false);
     public final List<AnyToPeer> serveRequests = Collections.synchronizedList(new ArrayList<>());
 
-    public AtomicBoolean lockColDown = new AtomicBoolean(false);
+    //public AtomicBoolean lockColDown = new AtomicBoolean(false);
     public final List<AnyToPeer> colDownRequests = Collections.synchronizedList(new ArrayList<>());
 
     // Seeder's files
@@ -760,12 +759,19 @@ public class Peer {
                 }else if(req.method == Method.SEEDER_SERVE){
                     // this is a method that only seeders receive from other peers who are not seeders
                     // save all requests
+                    int size = 0;
                     synchronized (serveRequests){
-                        System.out.println("MPIKEEEEEEEEEEEEEEEEEEEEEEEEE          "+ ip +"    /   "+ port);
+                        System.out.println("MPIKEEEEEEEEEEEEEEEEEEEEEEEEE          "+ ip +"    /   "+ port+"     "+req);
                         serveRequests.add(req);
+                        size = serveRequests.size();
                     }
+
                     // If true, is the first request
-                    if(lockServe.compareAndExchange(false, true)){
+                    if(size == 1){
+                        synchronized (serveRequests){
+                            System.out.println("MPIKEEEEEEEEEEEEEEEEEEEEEEEEE          "+ ip +"    /   "+ port+"     "+req);
+                            serveRequests.add(req);
+                        }
                         try{
                             Thread.sleep(200); // the first thread waits for 200msc, in case it receives more requests
                         } catch(InterruptedException e){
@@ -780,7 +786,7 @@ public class Peer {
                             System.out.println("NUM OF REQUESTS: "+serveRequests.size()+"  /  "+ ip +"    /   "+ port);
                             tempRequests = new ArrayList<>(serveRequests);
                             serveRequests.clear();
-                            lockServe.compareAndExchange(true, false);
+                            //lockServe.compareAndExchange(true, false);
                         }
 
                         // save all partitions
@@ -791,7 +797,9 @@ public class Peer {
                         if(tempRequests.size()>1){
                            selectedPeer = ThreadLocalRandom.current().nextInt(0, tempRequests.size());
                         }
-
+                        if(tempRequests.size()==0){
+                            System.out.println("MHDENNNNNNNN      "+ip +"    /   "+ port);
+                        }
                         AnyToPeer selectedReq = tempRequests.get(selectedPeer);
                         if(completedFiles.containsKey(selectedReq.fileName)){
                             // get all file's parts
@@ -805,14 +813,17 @@ public class Peer {
                             answerAllWithANegativeResponse(tempRequests);
                         }
                     }
+
                 }else if(req.method == Method.COLLABORATIVE_DOWNLOAD){
                     // this is a method that only non seeders receive from other peers who are not seeders
 
+                    int size = 0;
                     // save all requests
                     synchronized (colDownRequests){
                         colDownRequests.add(req);
+                        size = colDownRequests.size();
                     }
-                    if(lockColDown.compareAndExchange(false, true)){
+                    if(size == 1){
                         try{
                             Thread.sleep(200);
                         } catch(InterruptedException e){
@@ -826,7 +837,6 @@ public class Peer {
                         synchronized (colDownRequests) {
                             tempRequests = new ArrayList<>(colDownRequests);
                             colDownRequests.clear();
-                            lockColDown.compareAndExchange(true, false);
                         }
 
                         // in case peer received only one request
