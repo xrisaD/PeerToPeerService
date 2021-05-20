@@ -120,7 +120,7 @@ public class PeerAutoModeThread extends Thread {
     public ArrayList<Info> getSeeders( ArrayList<Info> peersWithTheFile, String filename){
         ArrayList<Info> infoOnlyForSeeders = new ArrayList<>();
         for(int i=0; i<peersWithTheFile.size(); i++){
-            if(peersWithTheFile.get(i).seederBit.get(filename)){
+            if (peersWithTheFile.get(i).seederBit.get(filename)) {
                 infoOnlyForSeeders.add(peersWithTheFile.get(i));
             }
         }

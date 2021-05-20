@@ -60,6 +60,10 @@ public class Peer {
         return port;
     }
 
+    public String getUsername() {
+        return username;
+    }
+
     public void setToken_id(int token_id) {
         this.token_id = token_id;
     }
@@ -262,6 +266,7 @@ public class Peer {
         return null;
     }
 
+
     // login to P2P system
     public StatusCode login(){
         Socket socket = null;
@@ -353,7 +358,7 @@ public class Peer {
 
             PeerToTracker peerToTracker = new PeerToTracker();
             peerToTracker.method = Method.NOTIFY_SUCCESSFUL_PART;
-
+            peerToTracker.username = getUsername();
             peerToTracker.fileName = fileName;
             peerToTracker.id = id;
             peerToTracker.peerUsername = peerUsername;
@@ -873,6 +878,8 @@ public class Peer {
                 }else if(req.method == Method.SEEDER_SERVE_SUCCESSFUL || req.method == Method.COLLABORATIVE_DOWNLOAD_NOT_ANSWER){
                     // just save the sent partition
                     savePartition(req);
+                    notifySuccessfulPart(req.fileName, req.id, getUsername());
+
                 }else if(req.method == Method.NON_SELECTED){
                     synchronized (state){
                         state.counter++;
@@ -943,6 +950,7 @@ public class Peer {
         for (int i=0; i<tempRequests.size(); i++){
             if(tempRequests.get(i).buffer != null){
                 savePartition(tempRequests.get(i));
+                notifySuccessfulPart(tempRequests.get(i).fileName, tempRequests.get(i).id, this.username);
             }
         }
     }

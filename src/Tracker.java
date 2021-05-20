@@ -186,6 +186,7 @@ public class Tracker {
                     replyAllPeers(out);
                 }else if(req.method == Method.NOTIFY_SUCCESSFUL_PART){
                     // Update Files_toInfo data structure, essentially we add peer's info to the array of the peers that have the specific file
+
                     Info infoTemp = usernameToInfo.get(req.username);
 
                     // first time that this peer get a part for this file
@@ -193,6 +194,7 @@ public class Tracker {
                         filesToInfo.get(req.fileName).put(req.username, infoTemp);
                         infoTemp.sharedDirectory.add(req.fileName);
                         infoTemp.pieces.put(req.fileName, new ArrayList<>());
+                        infoTemp.seederBit.put(req.fileName, false);
                     }
                     if(!infoTemp.pieces.get(req.fileName).contains(req.id)) {
                         infoTemp.pieces.get(req.fileName).add(req.id);
