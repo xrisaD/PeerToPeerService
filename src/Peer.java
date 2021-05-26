@@ -344,7 +344,7 @@ public class Peer {
         return null;
     }
 
-    // inform tracker that you are a seeder
+    // inform tracker that you have a part
     public StatusCode notifySuccessfulPart(String fileName, int id,String peerUsername){
         Socket socket = null;
         ObjectOutputStream out = null;
