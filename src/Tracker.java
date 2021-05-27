@@ -10,6 +10,8 @@ import java.util.concurrent.ThreadLocalRandom;
 
 
 public class Tracker {
+
+    // tacker has specific port
     static final String ip = "127.0.0.1";
     static final int port = 5000;
 
@@ -36,7 +38,7 @@ public class Tracker {
     public Tracker(String fileDownloadListPath) {
         // Reads all files from specific file in given path.
         allFiles = Util.readFileDownloadList(fileDownloadListPath);
-
+        // initialize a hashmap for each file
         fillFilesToToken();
     }
 
@@ -66,6 +68,7 @@ public class Tracker {
 
     public static void main(String[] args){
         try{
+            // start Tracker
             Tracker p = new Tracker(args[0]);
             p.startServer();
 
@@ -96,19 +99,31 @@ public class Tracker {
 
                 // Depending on Input object performs certain functions.
                 if (req.method == Method.REGISTER) {
+                    // if peers gave an existing username
                     if (registeredPeers.containsKey(req.username)) {
+                        //reply with fail to register
                         failureRegister(out);
                     } else {
+                        // save peer's info
                         registeredPeers.put(req.username, req.password);
                         Info peerInfo = new Info(req.username);
                         usernameToInfo.put(req.username, peerInfo);
+                        // reply with successful register
                         successRegister(out);
                     }
                 } else if (req.method == Method.LOGIN) {
+                    // if peers gave the username and password of a registered peer
                     if (registeredPeers.containsKey(req.username) && registeredPeers.get(req.username).equals(req.password)) {
+                        // generate a random token id
                         int token_id = getRandomTokenId();
                         allTokenIds.add(token_id);
+                        // reply with successful login
                         successLogin(out, token_id);
+
+                        // peers answer with inform method
+                        // they inform the tracker about their parts of files
+                        // and if they are seeder for each one of them
+                        // tracker saves these info
                         PeerToTracker secondInput = (PeerToTracker) in.readObject();
                         System.out.printf("[Tracker %s , %d] GOT PEER INFO " + secondInput.toString() + " \n", getIp(), getPort());
                         System.out.println("----");
@@ -119,28 +134,32 @@ public class Tracker {
                         infoTemp.pieces = secondInput.pieces;
                         infoTemp.seederBit = secondInput.seederBit;
 
-
                         for (String i : infoTemp.sharedDirectory) {
                             filesToInfo.get(i).put(secondInput.username, infoTemp);
                         }
                     } else {
+                        // reply with unsuccessful login
                         failureLogin(out);
                     }
                 } else if (req.method == Method.LOGOUT) {
+                    // if peers gave a correct token id
+                    // it means that they are logged in, so they can logout
                     if(allTokenIds.contains(req.token_id)) {
+                        // dlete peer's info about what files they have
                         allTokenIds.remove((Integer) req.token_id);
                         ArrayList<String> filesOfRemoved = usernameToInfo.get(req.username).sharedDirectory;
-
                         for(String i: filesOfRemoved){
-                            // It removes from Files_toInfo all the Shared_directory files in the Concurrent hashmap with key "req.token_id" which is the token given from the peer.
+                            // It removes from Files_toInfo all the Shared_directory files in the hashmap with key "req.token_id" which is the token given from the peer.
                             filesToInfo.get(i).remove(req.username);
                         }
+                        // reply with successful logout
                         successLogout(out);
                     }else{
+                        // reply with unsuccessful logout
                         failureLogout(out);
                     }
-
                 } else if (req.method == Method.LIST) {
+                    // reply with a list with the names of the file
                     replyList(out);
                 } else if (req.method == Method.DETAILS) {
                     // get peers with at least one piece of the required file
@@ -165,10 +184,13 @@ public class Tracker {
                             }
                         }
                     }
+                    // at least one peer has the file
                     if(!peersWithFile.isEmpty()) {
+                        // reply with peers' info with the file
                         System.out.println("Peers with the file: "+peersWithFile.size());
                         replyDetails(out, activeFiles);
                     }else{
+                        // nobody has the file
                         System.out.println("No peer with this file");
                         replyDetailsNot(out);
                     }

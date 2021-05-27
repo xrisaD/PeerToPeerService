@@ -2,7 +2,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class SendRequestsThread extends Thread {
     Peer p;
@@ -127,7 +126,7 @@ public class SendRequestsThread extends Thread {
         }else{
             method = Method.COLLABORATIVE_DOWNLOAD;
         }
-        p.collaborativeDownloadOrSeeederServe(method, file, peersWithTheFile, p.myInfo, null, -1);
+        p.collaborativeDownloadOrSeederServe(method, file, peersWithTheFile, p.myInfo, null, -1);
 
         // check each time if the thread has been interrupted
         // this will happen when 2 secs passed
