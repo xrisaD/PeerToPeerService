@@ -37,9 +37,6 @@ public class PeerAutoModeThread extends Thread {
             ArrayList<Info> peersWithTheFile = p.details(file); // get file's details
             if(peersWithTheFile!=null && peersWithTheFile.size()>0){
                 System.out.println("PEERS_WITH THE FILE: " + peersWithTheFile.size());
-                if(!p.nonCompletedFiles.containsKey(file)){
-                    p.nonCompletedFiles.put(file, new ArrayList<>());
-                }
 
                 ArrayList<Info> peersWithNeededParts = getPeersWithNeededChunks(peersWithTheFile, file, p.nonCompletedFiles.get(file)); // peer with chunks that we don't have
                 ArrayList<Info> seeders = getSeeders(peersWithNeededParts, file); // file's seeders
@@ -95,7 +92,7 @@ public class PeerAutoModeThread extends Thread {
 
                     while(true){
                         try {
-                            sleep(2000);
+                            sleep(10);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }

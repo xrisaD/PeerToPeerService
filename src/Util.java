@@ -87,7 +87,7 @@ public class Util {
         return temp;
     }
 
-    //merge partitions to one
+    // merge partitions to one
     public static byte[] assemble(byte[][] in){
         int size = 0;
         if(in.length==1) {

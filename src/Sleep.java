@@ -1,5 +1,5 @@
 
-// a thread that sleeps for 200secs and when it wakes up it sets don200 to true
+// a thread that sleeps for 200secs and when it wakes up it sets done200 to true
 public class Sleep extends Thread{
 
     Peer p;
