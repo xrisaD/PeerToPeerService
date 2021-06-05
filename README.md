@@ -49,4 +49,4 @@ For example, if we have 2 peers: <br>
 ![](architecture.PNG)
 
 *** 
-This project was developed with Pair Programming technique.
+This project was developed with the Pair Programming technique.
